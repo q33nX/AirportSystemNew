@@ -102,6 +102,6 @@ public class MockDataService : IFlightRepository
     public async Task<List<Airport>> GetAirportsAsync()
     {
 
-        return await Task.FromResult(Airports);
+        return Airports;
     }
 }

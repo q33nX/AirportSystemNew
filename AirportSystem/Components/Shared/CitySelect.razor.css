@@ -1,0 +1,169 @@
+﻿/* Обертка для инпута и кода */
+.input-wrapper {
+    width: 100%;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* Сам инпут: добавляем отступ справа, чтобы текст не перекрывал IATA */
+.avia-input-text {
+    padding-right: 45px !important; /* Оставляем место под 3 буквы кода */
+}
+
+/* Стиль для IATA-кода внутри инпута */
+.avia-iata-display {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 13px;
+    font-weight: 700;
+    color: #94a3b8; /* Тот же серый, что у Aviasales */
+    text-transform: uppercase;
+    pointer-events: none; /* Чтобы клик по коду проваливался в инпут */
+    user-select: none;
+}
+
+/* Ячейки ввода */
+.avia-cell {
+    flex: 1;
+    padding: 12px 25px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-right: 1px solid #f1f5f9;
+    transition: background 0.2s ease;
+    background-color: transparent;
+}
+
+    .avia-cell:first-child {
+        border-top-left-radius: 12px;
+        border-bottom-left-radius: 12px;
+    }
+
+    .avia-cell:hover {
+        background-color: #f8fafc;
+    }
+
+    /* Убираем границу у последней ячейки перед кнопкой */
+    .avia-cell.border-end:last-of-type {
+        border-right: none !important;
+    }
+
+.custom-suggestions {
+    position: absolute;
+    top: 100%; /* Сразу под ячейкой */
+    left: 0;
+    width: 100%;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    z-index: 1000;
+    margin-top: 5px;
+    padding: 8px 0;
+    overflow: hidden;
+}
+
+/* Строка города */
+.suggestion-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+    .suggestion-item:hover {
+        background: #f1f5f9;
+    }
+
+/* Название города и страны */
+.suggestion-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.city-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.country-name {
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+/* Код аэропорта (MOW, DXB и т.д.) */
+.iata-code {
+    font-size: 13px;
+    font-weight: 700;
+    color: #94a3b8;
+    background: #f8fafc;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* Подписи (ОТКУДА, КУДА...) */
+.avia-label {
+    font-size: 10px;
+    font-weight: 800;
+    color: #94a3b8;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+    letter-spacing: 0.5px;
+    pointer-events: none;
+}
+
+/* Сброс стилей для инпутов (УБИРАЕМ СТРЕЛКИ И СПИСКИ) */
+.avia-input-text,
+.avia-input-date {
+    border: none !important;
+    outline: none !important;
+    background: transparent !important;
+    width: 100%;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1e293b;
+    box-shadow: none !important;
+    -webkit-tap-highlight-color: transparent;
+    /* Убираем стандартный вид в Safari/Chrome */
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+    /* 1. ГЛАВНОЕ: Убираем ту самую стрелочку у datalist */
+    .avia-input-text::-webkit-calendar-picker-indicator {
+        display: none !important;
+        opacity: 0;
+    }
+
+    /* 2. Убираем стандартные иконки очистки и стрелки в Edge/IE */
+    .avia-input-text::-ms-clear,
+    .avia-input-text::-ms-expand {
+        display: none;
+    }
+
+    .avia-input-text::placeholder {
+        color: #cbd5e1;
+        font-weight: 400;
+    }
+
+    /* Иконка календаря (оставляем, но делаем аккуратной) */
+    .avia-input-date::-webkit-calendar-picker-indicator {
+        cursor: pointer;
+        opacity: 0.6;
+    }
+
+    /* Убираем желтый фон автозаполнения */
+    .avia-input-text:-webkit-autofill,
+    .avia-input-text:-webkit-autofill:hover,
+    .avia-input-text:-webkit-autofill:focus {
+        -webkit-box-shadow: 0 0 0px 1000px white inset !important;
+        -webkit-text-fill-color: #1e293b !important;
+        transition: background-color 5000s ease-in-out 0s;
+    }

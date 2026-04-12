@@ -1,0 +1,39 @@
+﻿<div class="avia-cell border-end" style="position: relative;">
+    <div class="input-wrapper">
+        @* Нативный инпут для работы календаря *@
+        <input type="date"
+               class="avia-input-date-native"
+               value="@SelectedDate.ToString("yyyy-MM-dd")"
+               @onchange="HandleChange"
+               min="@MinDate.ToString("yyyy-MM-dd")" />
+
+        @* Контейнер, который выглядит в точности как текстовый инпут *@
+        <div class="avia-input-text date-visual-sync">
+            @if (SelectedDate == DateTime.MinValue || SelectedDate.Date == DateTime.Now.AddYears(100).Date)
+            {
+                <span class="placeholder-text">@Placeholder</span>
+            }
+            else
+            {
+                <span class="day-number">@SelectedDate.Day</span>
+                <span class="month-year">@SelectedDate.ToString("MMM, ddd").ToLower()</span>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Placeholder { get; set; } = "Когда";
+    [Parameter] public DateTime SelectedDate { get; set; } = DateTime.Now;
+    [Parameter] public DateTime MinDate { get; set; } = DateTime.Now;
+    [Parameter] public EventCallback<DateTime> OnDateSelected { get; set; }
+
+    private async Task HandleChange(ChangeEventArgs e)
+    {
+        if (DateTime.TryParse(e.Value?.ToString(), out var date))
+        {
+            SelectedDate = date;
+            await OnDateSelected.InvokeAsync(date);
+        }
+    }
+}

@@ -25,4 +25,22 @@ public class FlightSearchService
             f.DepartureDate.Date == date.Date
         ).ToList();
     }
+
+    public async Task<List<FlightInstance>> GetAvailableFlightsAsync()
+    {
+        // Здесь в будущем можно добавить фильтрацию по статусу "Активен", 
+        // сортировку по цене или логику кеширования
+        var flights = await _repository.GetAllFlightsAsync();
+        return flights.ToList();
+    }
+
+    public async Task<List<City>> GetAvailableCitiesAsync()
+    {
+        var airports = await _repository.GetAirportsAsync();
+        return airports
+            .Select(a => a.City)
+            .Distinct()
+            .OrderBy(c => c.Name)
+            .ToList();
+    }
 }

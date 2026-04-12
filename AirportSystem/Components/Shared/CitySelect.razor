@@ -1,0 +1,103 @@
+﻿@using AirportSystem.Core.Entities @* Проверь правильность namespace для класса City *@
+
+<div class="avia-cell border-end" style="position: relative;">
+    <div class="input-wrapper">
+        <input type="text"
+               class="avia-input-text"
+               placeholder="@Placeholder"
+               @bind="Query"
+               @oninput="HandleInput"
+               @onblur="HandleBlur" />
+
+        @if (!string.IsNullOrEmpty(SelectedIata))
+        {
+            <span class="avia-iata-display">@SelectedIata</span>
+        }
+    </div>
+
+    @if (ShowSuggestions && Suggestions.Any())
+    {
+        <div class="custom-suggestions">
+            @foreach (var city in Suggestions)
+            {
+                <div class="suggestion-item" @onclick="() => SelectCity(city)">
+                    <div class="suggestion-info">
+                        <span class="city-name">@city.Name</span>
+                        <span class="country-name">@city.Country</span>
+                    </div>
+                    <span class="iata-code">@city.IATACode</span>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string Placeholder { get; set; }
+    [Parameter] public List<City> Cities { get; set; }
+
+    // Передаем выбранный город в родительский компонент
+    [Parameter] public EventCallback<City> OnCitySelected { get; set; }
+
+    private string Query { get; set; } = "";
+    private string SelectedIata { get; set; } = "";
+    private string LastConfirmedName { get; set; } = "";
+    private List<City> Suggestions { get; set; } = new();
+    private bool ShowSuggestions { get; set; } = false;
+
+    private void HandleInput(ChangeEventArgs e)
+    {
+        Query = e.Value?.ToString() ?? "";
+
+        if (string.IsNullOrWhiteSpace(Query))
+        {
+            Clear();
+            return;
+        }
+
+        Suggestions = Cities
+            .Where(c => c.Name.Contains(Query, StringComparison.OrdinalIgnoreCase))
+            .Take(5)
+            .ToList();
+
+        ShowSuggestions = Suggestions.Any();
+    }
+
+    private async Task HandleBlur()
+    {
+        // Задержка, чтобы успел сработать клик по элементу списка
+        await Task.Delay(200);
+
+        if (ShowSuggestions && Suggestions.Any())
+        {
+            SelectCity(Suggestions.First());
+        }
+        else if (Query != LastConfirmedName)
+        {
+            Clear();
+        }
+
+        ShowSuggestions = false;
+        StateHasChanged();
+    }
+
+    private void SelectCity(City city)
+    {
+        Query = city.Name;
+        SelectedIata = city.IATACode;
+        LastConfirmedName = city.Name;
+        ShowSuggestions = false;
+
+        // Оповещаем родителя
+        OnCitySelected.InvokeAsync(city);
+    }
+
+    private void Clear()
+    {
+        Query = "";
+        SelectedIata = "";
+        LastConfirmedName = "";
+        ShowSuggestions = false;
+        OnCitySelected.InvokeAsync(null);
+    }
+}

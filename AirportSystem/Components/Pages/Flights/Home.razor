@@ -4,7 +4,9 @@
 @using AirportSystem.Core.Entities
 @using AirportSystem.Core.Services
 @using AirportSystem.Core.Interfaces
-@inject IFlightRepository FlightRepository
+@using AirportSystem.Core.ViewModels
+
+@inject FlightSearchService FlightSearchService
 
 <PageTitle>Home</PageTitle>
 
@@ -13,6 +15,7 @@
 <div class="search-section">
     <div class="container">
         <h2 class="text-center fw-bold mb-5 text-white">Поиск авиабилетов</h2>
+
         <div class="avia-tabs mb-3">
             @* Используем Enum вместо строк *@
             <button class="avia-tab @(_currentMode == SearchMode.Roundtrip ? "active" : "")"
@@ -28,26 +31,22 @@
         <div class="avia-panel shadow-lg">
             @if (_currentMode == SearchMode.Roundtrip)
             {
-                <div class="avia-cell border-end">
-                    <label class="avia-label">ОТКУДА</label>
-                    <select class="avia-select">
-                        <option value="">Любой город</option>
-                    </select>
-                </div>
-                <div class="avia-cell border-end">
-                    <label class="avia-label">КУДА</label>
-                    <select class="avia-select">
-                        <option value="">Любой город</option>
-                    </select>
-                </div>
-                <div class="avia-cell border-end">
-                    <label class="avia-label">ТУДА</label>
-                    <input type="date" class="avia-input" @bind="departureDate" min="@today" />
-                </div>
-                <div class="avia-cell border-end">
-                    <label class="avia-label">ОБРАТНО</label>
-                    <input type="date" class="avia-input" @bind="returnDate" min="@(departureDate != null ? departureDate.Value.ToString("yyyy-MM-dd") : today)" />
-                </div>
+                <CitySelect Placeholder="Откуда" 
+                            Cities="_cities" 
+                            OnCitySelected="c => _departureCity = c" />
+
+                <CitySelect Placeholder="Куда"
+                            Cities="_cities"
+                            OnCitySelected="c => _arrivalCity = c" />
+
+                <DateSelect Placeholder="Когда"
+                            SelectedDate="@_departureDate"
+                            OnDateSelected="@(d => _departureDate = d)" />
+
+                <DateSelect Placeholder="Обратно"
+                            SelectedDate="@(_returnDate ?? DateTime.Now.AddYears(100))"
+                            OnDateSelected="@(d => _returnDate = d)" />
+
                 <button type="button" class="btn-search-main" @onclick="() => HandleSearch()">Найти</button>
             }
             else
@@ -205,35 +204,54 @@
 </div>
 
 @code {
-    private int pageSize = 10;
+    // Переменные для хранения выбранных данных
+    private City? _departureCity;
+    private City? _arrivalCity;
 
-    private string today = @DateTime.Today.ToString("yyyy-MM-dd");
+    // Инициализируем даты, чтобы не было ошибок
+    private DateTime _departureDate = DateTime.Now;
+    private DateTime? _returnDate; // Nullable, если обратный билет не обязателен
+
+    private List<City> _cities = new();
+
+    private int pageSize = 10;
+    private string today = DateTime.Today.ToString("yyyy-MM-dd");
 
     private DateTime? departureDate;
     private DateTime? returnDate;
 
     private bool _isSearching = false;
-    private List<FlightInstance>? _displayedFlights = new ();
 
-    private List<FlightInstance>? _flights = new ();
+    // Инициализируем пустыми списками, чтобы избежать null-checks в разметке
+    private List<FlightInstance> _displayedFlights = new();
+    private List<FlightInstance> _flights = new();
 
-    private List<Airport> airports = new();
+    private FlightSearchModel searchModel = new();
 
+    protected override async Task OnInitializedAsync()
+    {
+        // Подгружаем города при инициализации
+        _cities = await FlightSearchService.GetAvailableCitiesAsync();
+    }
 
-    // Этот метод вызывается при нажатии на кнопку "Найти"
     private async Task HandleSearch()
     {
         _isSearching = true;
+        _displayedFlights.Clear();
 
         try
         {
-            var allFlights = await FlightRepository.GetAllFlightsAsync();
-            _flights = allFlights.ToList();
+            // Обращаемся к сервису, а не напрямую к источнику данных
+            _flights = await FlightSearchService.GetAvailableFlightsAsync();
 
             if (_flights.Any())
             {
-                RefreshDisplay();
+                LoadMore();
             }
+        }
+        catch (Exception ex)
+        {
+            // Логируем ошибку
         }
         finally
         {
@@ -241,15 +259,15 @@
         }
     }
 
-    private void RefreshDisplay() 
-    { 
-        _displayedFlights.Clear(); 
-        LoadMore(); 
-    }
-
     private void LoadMore()
     {
-        var next = _flights.Skip(_displayedFlights.Count).Take(pageSize).ToList();
+        if (_flights == null || !_flights.Any()) return;
+
+        var next = _flights
+            .Skip(_displayedFlights.Count)
+            .Take(pageSize)
+            .ToList();
+
         _displayedFlights.AddRange(next);
     }
 }
