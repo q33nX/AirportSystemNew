@@ -5,6 +5,7 @@
 @using AirportSystem.Core.Services
 @using AirportSystem.Core.Interfaces
 @using AirportSystem.Core.ViewModels
+@using AirportSystem.Core.Enums
 
 @inject FlightSearchService FlightSearchService
 
@@ -91,9 +92,9 @@
                         </button>
                     </div>
                     <span class="ms-auto count-badge">
-                        @if (_flights != null && _flights.Any())
+                        @if (_filteredFlights != null && _filteredFlights.Any())
                         {
-                            <span>Найдено рейсов: @_flights.Count</span>
+                            <span>Найдено рейсов: @_filteredFlights.Count</span>
                         }
                     </span>
                 </div>
@@ -150,13 +151,13 @@
                         </div>
                     }
 
-                    @if (_displayedFlights.Count < _flights.Count)
+                    @if (_displayedFlights.Count < _filteredFlights.Count)
                     {
                         <div class="text-center mt-5">
                             <button class="btn btn-outline-primary px-5 py-3 fw-bold rounded-pill shadow-sm load-more-btn" @onclick="LoadMore">
                                 Показать еще
                             </button>
-                            <p class="text-muted small mt-2">Показано @_displayedFlights.Count из @_flights.Count рейсов</p>
+                            <p class="text-muted small mt-2">Показано @_displayedFlights.Count из @_filteredFlights.Count рейсов</p>
                         </div>
                     }
                 }
@@ -178,126 +179,106 @@
                         <h5 class="fw-bold m-0 text-dark">
                             <i class="bi bi-sliders2-vertical me-2 text-primary"></i>Фильтры
                         </h5>
-                        <button class="btn btn-link btn-sm text-decoration-none p-0 filter-reset-btn">Сбросить все</button>
+                        <button class="btn btn-link btn-sm text-decoration-none p-0 filter-reset-btn" @onclick="ResetFilters">Сбросить все</button>
+                    </div>
+
+                    <div class="filter-section mb-4">
+                        <label class="filter-label">Авиакомпании</label>
+                        <div class="filter-scroll-area" style="max-height: 200px; overflow-y: auto;">
+                            @if (_allFoundFlights != null && _allFoundFlights.Any())
+                            {
+                                @foreach (var airline in _allFoundFlights.Select(f => f.Schema.Carrier).Distinct())
+                                {
+                                    <div class="custom-check-item">
+                                        <label class="check-container">
+                                            <span class="check-text">@airline.Name - @airline.IATACode</span>
+                                            <input type="checkbox"
+                                                   checked="@_filters.SelectedAirlines.Contains(airline)"
+                                                   @onchange="@(e => ToggleAirline(airline, e.Value))">
+                                            <span class="checkmark"></span>
+                                        </label>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted small">Сначала выполните поиск</span>
+                            }
+                        </div>
                     </div>
 
                     <div class="filter-section mb-4">
                         <label class="filter-label">Класс обслуживания</label>
-                        <div class="class-selector">
-                            <input type="radio" name="flightClass" id="econ" checked>
-                            <label for="econ">Эконом</label>
+                        <div class="time-grid">
+                            @foreach (var sc in Enum.GetValues<ServiceClass>())
+                            {
+                                <button class="time-chip @(_filters.SelectedClasses.Contains(sc) ? "active" : "")"
+                                        @onclick="@(() => ToggleServiceClass(sc))">
+                                    @if (sc == ServiceClass.Economy)
+                                    {
+                                        <i class="bi bi-person"></i>
+                                    }
+                                    else if (sc == ServiceClass.Business)
+                                    {
 
-                            <input type="radio" name="flightClass" id="comf">
-                            <label for="econ">Комфорт</label>
+                                        <i class="bi bi-briefcase"></i>
+                                    }
+                                    else if (sc == ServiceClass.First)
+                                    {
 
-                            <input type="radio" name="flightClass" id="biz">
-                            <label for="biz">Бизнес</label>
+                                        <i class="bi bi-star"></i>
+                                    }
+                                    else
+                                    {
 
-                            <input type="radio" name="flightClass" id="first">
-                            <label for="first">Первый</label>
+                                        <i class="bi bi-gem"></i>
+                                    }
+
+                                    <span>@sc.ToString()</span>
+                                </button>
+                            }
                         </div>
                     </div>
 
                     <div class="filter-section mb-4">
                         <label class="filter-label">Дни вылета</label>
                         <div class="days-grid">
-                            <label class="day-item"><input type="checkbox"><span>Пн</span></label>
-                            <label class="day-item"><input type="checkbox"><span>Вт</span></label>
-                            <label class="day-item"><input type="checkbox"><span>Ср</span></label>
-                            <label class="day-item"><input type="checkbox"><span>Чт</span></label>
-                            <label class="day-item"><input type="checkbox" checked><span>Пт</span></label>
-                            <label class="day-item"><input type="checkbox" checked><span>Сб</span></label>
-                            <label class="day-item"><input type="checkbox"><span>Вс</span></label>
-                        </div>
-                    </div>
-
-                    <div class="filter-section mb-4">
-                        <label class="filter-label">Пересадки</label>
-                        <div class="filter-stack">
-                            <div class="custom-check-item">
-                                <label class="check-container">
-                                    <span class="check-text">Без пересадок</span>
-                                    <span class="check-price">от 14 500 ₽</span>
-                                    <input type="checkbox" checked>
-                                    <span class="checkmark"></span>
+                            @foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+                            {
+                                var d = day;
+                                <label class="day-item">
+                                    <input type="checkbox" checked="@_filters.SelectedDays.Contains(d)"
+                                           @onchange="@(e => ToggleDay(d, e.Value))">
+                                    <span>@GetDayShortName(d)</span>
                                 </label>
-                            </div>
-                            <div class="custom-check-item">
-                                <label class="check-container">
-                                    <span class="check-text">1 пересадка</span>
-                                    <span class="check-price">от 8 200 ₽</span>
-                                    <input type="checkbox">
-                                    <span class="checkmark"></span>
-                                </label>
-                            </div>
+                            }
                         </div>
                     </div>
 
                     <div class="filter-section mb-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <label class="filter-label m-0">Цена</label>
-                            <span class="price-value-badge">до 120 000 ₽</span>
+                            <span class="price-value-badge">до @_filters.MaxPrice.ToString("N0") ₽</span>
                         </div>
-                        <input type="range" class="styled-range" min="5000" max="250000" step="1000">
+                        <input type="range" class="styled-range" min="5000" max="250000" step="1000"
+                               @bind="_filters.MaxPrice" @bind:event="oninput" @onchange="OnFilterChanged">
                         <div class="d-flex justify-content-between mt-2">
                             <span class="range-limit">5 000</span>
                             <span class="range-limit">250 000</span>
                         </div>
                     </div>
 
-                    <div class="filter-section mb-4">
-                        <label class="filter-label">Авиакомпании</label>
-                        <div class="filter-scroll-area">
-                            <div class="custom-check-item">
-                                <label class="check-container">
-                                    <span class="check-text">Aeroflot</span>
-                                    <input type="checkbox" checked>
-                                    <span class="checkmark"></span>
-                                </label>
-                            </div>
-                            <div class="custom-check-item">
-                                <label class="check-container">
-                                    <span class="check-text">S7 Airlines</span>
-                                    <input type="checkbox">
-                                    <span class="checkmark"></span>
-                                </label>
-                            </div>
-                            <div class="custom-check-item">
-                                <label class="check-container">
-                                    <span class="check-text">Turkish Airlines</span>
-                                    <input type="checkbox">
-                                    <span class="checkmark"></span>
-                                </label>
-                            </div>
-                            <div class="custom-check-item">
-                                <label class="check-container">
-                                    <span class="check-text">Emirates</span>
-                                    <input type="checkbox">
-                                    <span class="checkmark"></span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
                     <div class="filter-section">
                         <label class="filter-label">Время вылета</label>
                         <div class="time-grid">
-                            <button class="time-chip active">
-                                <i class="bi bi-brightness-alt-high"></i>
-                                <span>Утро</span>
-                            </button>
-                            <button class="time-chip">
-                                <i class="bi bi-sun"></i>
-                                <span>День</span>
-                            </button>
-                            <button class="time-chip">
-                                <i class="bi bi-moon-stars"></i>
-                                <span>Вечер</span>
-                            </button>
-                            <button class="time-chip">
-                                <i class="bi bi-cloud-moon"></i>
-                                <span>Ночь</span>
-                            </button>
+                            @foreach (var slot in new[] { ("Morning", "Утро", "bi-brightness-alt-high"), ("Day", "День", "bi-sun"), ("Evening", "Вечер", "bi-moon-stars"), ("Night", "Ночь", "bi-cloud-moon") })
+                            {
+                                <button class="time-chip @(_filters.SelectedTimeSlots.Contains(slot.Item1) ? "active" : "")"
+                                        @onclick="@(() => ToggleTimeSlot(slot.Item1))">
+                                    <i class="bi @slot.Item3"></i>
+                                    <span>@slot.Item2</span>
+                                </button>
+                            }
                         </div>
                     </div>
                 </div>
@@ -309,75 +290,54 @@
 
 
 @code {
-    // Переменные для хранения выбранных данных
+    // --- Поиск и Данные ---
     private City? _departureCity;
     private City? _arrivalCity;
-
-    // Инициализируем даты, чтобы не было ошибок
     private DateTime? _departureDate;
     private DateTime? _returnDate;
 
     private List<City> _cities = new();
+    private List<FlightInstance> _allFoundFlights = new(); // Оригинальный результат поиска
+    private List<FlightInstance> _filteredFlights = new(); // Список после применения фильтров
+    private List<FlightInstance> _displayedFlights = new(); // Список для отрисовки (пагинация)
 
-    private int pageSize = 10;
-    private string today = DateTime.Today.ToString("yyyy-MM-dd");
-
+    // --- Состояние интерфейса ---
+    private FlightFilterModel _filters = new();
     private bool _isSearching = false;
-
-    // Инициализируем пустыми списками, чтобы избежать null-checks в разметке
-    private List<FlightInstance> _displayedFlights = new();
-    private List<FlightInstance> _flights = new();
-
-    private FlightSearchModel searchModel = new();
-
     private bool _isSearchPerformed = false;
-
-    private void OnDepartureChanged(DateTime? date)
-    {
-        _departureDate = date;
-
-        // Если дата возврата уже выбрана И она стала раньше новой даты вылета
-        if (_returnDate.HasValue && _departureDate.HasValue && _returnDate < _departureDate)
-        {
-            // Сбрасываем дату возврата в null, чтобы сработал плейсхолдер
-            _returnDate = null;
-        }
-    }
+    private int pageSize = 10;
+    private string _activeSort = "price";
+    private bool _isAscending = true;
 
     protected override async Task OnInitializedAsync()
     {
-        // Подгружаем города при инициализации
         _cities = await FlightSearchService.GetAvailableCitiesAsync();
-        ResetSegments();
     }
 
-    private void ResetSegments()
-    {
-        Segments = new List<FlightSchema> {
-            new() { },
-            new() { }
-        };
-    }
-
+    // --- Логика Поиска ---
     private async Task HandleSearch()
     {
+        if (_departureCity == null && _arrivalCity == null && !_departureDate.HasValue) return;
+
         _isSearching = true;
-        _displayedFlights.Clear();
+        _isSearchPerformed = false;
 
         try
         {
-            // Обращаемся к сервису, а не напрямую к источнику данных
-            _flights = await FlightSearchService.SearchFlights(_departureCity, _arrivalCity, _departureDate );
+            // 1. Получаем данные из сервиса
+            _allFoundFlights = await FlightSearchService.SearchFlights(_departureCity, _arrivalCity, _departureDate);
 
-            if (_flights.Any())
-            {
-                LoadMore();
-                _isSearchPerformed = true; // Триггер анимации и показа результатов
-            }
+            // 2. Сбрасываем фильтры при новом глобальном поиске
+            _filters = new FlightFilterModel();
+
+            // 3. Применяем фильтрацию и отображаем
+            ApplyAllChanges();
+
+            _isSearchPerformed = true;
         }
         catch (Exception ex)
         {
-            // Логируем ошибку
+            Console.WriteLine($"Search error: {ex.Message}");
         }
         finally
         {
@@ -385,11 +345,112 @@
         }
     }
 
+    private void ToggleAirline(Airline airline, object? isChecked)
+    {
+        bool checkedValue = (bool)(isChecked ?? false);
+        if (checkedValue)
+            _filters.SelectedAirlines.Add(airline);
+        else
+            _filters.SelectedAirlines.Remove(airline);
+
+        OnFilterChanged();
+    }
+
+    // --- Логика Фильтрации ---
+    private void OnFilterChanged()
+    {
+        ApplyAllChanges();
+    }
+
+    private void ToggleDay(DayOfWeek day, object? isChecked)
+    {
+        bool checkedValue = (bool)(isChecked ?? false);
+        if (checkedValue) 
+            _filters.SelectedDays.Add(day);
+        else 
+            _filters.SelectedDays.Remove(day);
+
+        ApplyAllChanges();
+    }
+
+    private void ToggleServiceClass(ServiceClass sc)
+    {
+        if (_filters.SelectedClasses.Contains(sc))
+        {
+            _filters.SelectedClasses.Remove(sc);
+        }
+        else
+        {
+            _filters.SelectedClasses.Add(sc);
+        }
+        OnFilterChanged();
+    }
+
+    private void ToggleTimeSlot(string slot)
+    {
+        if (_filters.SelectedTimeSlots.Contains(slot))
+            _filters.SelectedTimeSlots.Remove(slot);
+        else
+            _filters.SelectedTimeSlots.Add(slot);
+
+        ApplyAllChanges();
+    }
+
+    private void ResetFilters()
+    {
+        _filters = new FlightFilterModel();
+        ApplyAllChanges();
+    }
+
+    // --- Центральный метод обновления данных ---
+    private void ApplyAllChanges()
+    {
+        // 1. Фильтруем
+        _filteredFlights = FlightSearchService.ApplyFilters(_allFoundFlights, _filters);
+
+        // 2. Сортируем
+        SortFlightsInternal();
+
+        // 3. Обновляем отображение (сбрасываем на первую страницу)
+        _displayedFlights = _filteredFlights.Take(pageSize).ToList();
+
+        StateHasChanged();
+    }
+
+    // --- Сортировка ---
+    private void SetSort(string criterion)
+    {
+        if (_activeSort == criterion) _isAscending = !_isAscending;
+        else
+        {
+            _activeSort = criterion;
+            _isAscending = true;
+        }
+        ApplyAllChanges();
+    }
+
+    private void SortFlightsInternal()
+    {
+        if (!_filteredFlights.Any()) return;
+
+        if (_activeSort == "price")
+        {
+            _filteredFlights = _isAscending
+                ? _filteredFlights.OrderBy(f => f.BasePrice).ToList()
+                : _filteredFlights.OrderByDescending(f => f.BasePrice).ToList();
+        }
+        else if (_activeSort == "duration")
+        {
+            _filteredFlights = _isAscending
+                ? _filteredFlights.OrderBy(f => f.ActualDuration).ToList()
+                : _filteredFlights.OrderByDescending(f => f.ActualDuration).ToList();
+        }
+    }
+
+    // --- Вспомогательные методы ---
     private void LoadMore()
     {
-        if (_flights == null || !_flights.Any()) return;
-
-        var next = _flights
+        var next = _filteredFlights
             .Skip(_displayedFlights.Count)
             .Take(pageSize)
             .ToList();
@@ -397,43 +458,24 @@
         _displayedFlights.AddRange(next);
     }
 
-    private string _activeSort = "price";
-    private bool _isAscending = true;
-
-    private void SetSort(string criterion)
+    private void OnDepartureChanged(DateTime? date)
     {
-        if (_activeSort == criterion)
+        _departureDate = date;
+        if (_returnDate.HasValue && _departureDate.HasValue && _returnDate < _departureDate)
         {
-            _isAscending = !_isAscending; // Меняем направление, если кликнули на ту же кнопку
+            _returnDate = null;
         }
-        else
-        {
-            _activeSort = criterion;
-            _isAscending = true; // Сбрасываем на "по возрастанию" для нового критерия
-        }
-
-        // Здесь должна быть твоя логика сортировки списка _flights
-        SortFlights();
     }
 
-    private void SortFlights()
+    private string GetDayShortName(DayOfWeek day) => day switch
     {
-        // Пример базовой сортировки (адаптируй под свои поля)
-        if (_activeSort == "price")
-        {
-            _flights = _isAscending
-                ? _flights.OrderBy(f => f.BasePrice).ToList()
-                : _flights.OrderByDescending(f => f.BasePrice).ToList();
-        }
-
-        if (_activeSort == "duration")
-        {
-            _flights = _isAscending
-                ? _flights.OrderBy(f => f.ActualDuration).ToList()
-                : _flights.OrderByDescending(f => f.ActualDuration).ToList();
-        }
-
-        // После сортировки обновляем отображаемые данные
-        _displayedFlights = _flights.Take(_displayedFlights.Count).ToList();
-    }
+        DayOfWeek.Monday => "Пн",
+        DayOfWeek.Tuesday => "Вт",
+        DayOfWeek.Wednesday => "Ср",
+        DayOfWeek.Thursday => "Чт",
+        DayOfWeek.Friday => "Пт",
+        DayOfWeek.Saturday => "Сб",
+        DayOfWeek.Sunday => "Вс",
+        _ => ""
+    };
 }

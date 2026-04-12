@@ -1,5 +1,7 @@
 ﻿using AirportSystem.Core.Entities;
 using AirportSystem.Core.Interfaces;
+using AirportSystem.Core.ViewModels;
+using AirportSystem.Core.Enums;
 
 namespace AirportSystem.Core.Services;
 
@@ -64,5 +66,46 @@ public class FlightSearchService
             .Distinct()
             .OrderBy(c => c.Name)
             .ToList();
+    }
+
+    public List<FlightInstance> ApplyFilters(List<FlightInstance> allFlights, FlightFilterModel filters)
+    {
+        var query = allFlights.AsQueryable();
+
+        // Фильтр по цене
+        query = query.Where(f => f.BasePrice <= filters.MaxPrice);
+
+        // Фильтр по авиакомпаниям (если что-то выбрано)
+        if (filters.SelectedAirlines.Any())
+        {
+            query = query.Where(f => filters.SelectedAirlines.Contains(f.Schema.Carrier));
+        }
+
+        // Фильтр по дням недели
+        if (filters.SelectedDays.Any())
+        {
+            query = query.Where(f => f.Schema.OperatingDays.Any(day => filters.SelectedDays.Contains(day)));
+        }
+
+        // Логика времени суток
+        if (filters.SelectedTimeSlots.Any())
+        {
+            query = query.Where(f =>
+                (filters.SelectedTimeSlots.Contains("Morning") && f.ActualDepartureTime.Hour >= 6 && f.ActualDepartureTime.Hour < 12) ||
+                (filters.SelectedTimeSlots.Contains("Day") && f.ActualDepartureTime.Hour >= 12 && f.ActualDepartureTime.Hour < 18) ||
+                (filters.SelectedTimeSlots.Contains("Evening") && f.ActualDepartureTime.Hour >= 18 && f.ActualDepartureTime.Hour < 24) ||
+                (filters.SelectedTimeSlots.Contains("Night") && f.ActualDepartureTime.Hour >= 0 && f.ActualDepartureTime.Hour < 6)
+            );
+        }
+
+        // Фильтр по классу обслуживания
+        if (filters.SelectedClasses.Any())
+        {
+            query = query.Where(f => f.Aircraft.Seats.Any(seat => filters.SelectedClasses.Contains(seat.Class)));
+            // Если же ты проверяешь наличие свободных мест конкретного класса:
+            // query = query.Where(f => f.AvailableSeats.Any(s => s.Type == filters.SelectedClass && s.Count > 0));
+        }
+
+        return query.ToList();
     }
 }
