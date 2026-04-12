@@ -2,10 +2,52 @@
    1. ОБЩИЕ СТИЛИ СЕКЦИИ
    ========================================================================== */
 .search-section {
-    background: linear-gradient(180deg, #0c73fe 0%, #085ad0 100%);
+    /*    background: linear-gradient(180deg, #0c73fe 0%, #085ad0 100%);
     padding: 60px 0 100px 0;
     margin-top: -24px;
-    transition: opacity 0.25s ease;
+    transition: opacity 0.25s ease;*/
+/*    margin-top: -24px;*/
+    display: flex;
+    padding: 40px 0 40px 0;
+    align-items: center; /* Вертикальное центрирование */
+    justify-content: center;
+    width: 100%;
+    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1); /* Плавный взлет */
+    background: linear-gradient(180deg, #0c73fe 0%, #085ad0 100%); /* Твой фоновый цвет */
+}
+
+/* Состояние "На весь экран" */
+.search-section.full-screen {
+    min-height: calc(100vh - 70px); /* Высота до футера (минус высота хедера) */
+}
+
+/* Состояние "После поиска" */
+.search-section.mini {
+    min-height: 150px; /* Сжимается до компактного размера */
+/*    padding: 20px 0;*/
+}
+
+.search-content {
+    width: 100%;
+    max-width: 1200px;
+    padding: 0 15px;
+}
+
+/* Плавное появление результатов */
+.fade-in {
+    animation: fadeIn 0.8s ease-in forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* ==========================================================================

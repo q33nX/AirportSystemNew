@@ -12,7 +12,7 @@
 
 @namespace AirportSystem.Components.Pages
 
-<div class="search-section">
+<div class="search-section @(_isSearchPerformed ? "mini" : "full-screen")">
     <div class="container">
         <h2 class="text-center fw-bold mb-5 text-white">Поиск авиабилетов</h2>
 
@@ -31,24 +31,10 @@
         <div class="avia-panel shadow-lg">
             @if (_currentMode == SearchMode.Roundtrip)
             {
-                <CitySelect Placeholder="Откуда" 
-                            Cities="_cities" 
-                            OnCitySelected="c => _departureCity = c" />
-
-                <CitySelect Placeholder="Куда"
-                            Cities="_cities"
-                            OnCitySelected="c => _arrivalCity = c" />
-
-                <DateSelect Placeholder="Когда"
-                            SelectedDate="@_departureDate"
-                            MinDate="@DateTime.Now"
-                            OnDateSelected="@OnDepartureChanged" />
-
-                <DateSelect Placeholder="Обратно"
-                            SelectedDate="@_returnDate"
-                            MinDate="@(_departureDate ?? DateTime.Now)"
-                            OnDateSelected="@(d => _returnDate = d)" />
-
+                <CitySelect Placeholder="Откуда" Cities="_cities" OnCitySelected="c => _departureCity = c" />
+                <CitySelect Placeholder="Куда" Cities="_cities" OnCitySelected="c => _arrivalCity = c" />
+                <DateSelect Placeholder="Когда" SelectedDate="@_departureDate" MinDate="@DateTime.Now" OnDateSelected="@OnDepartureChanged" />
+                <DateSelect Placeholder="Обратно" SelectedDate="@_returnDate" MinDate="@(_departureDate ?? DateTime.Now)" OnDateSelected="@(d => _returnDate = d)" />
                 <button type="button" class="btn-search-main" @onclick="() => HandleSearch()">Найти</button>
             }
             else
@@ -100,110 +86,115 @@
     </div>
 </div>
 
-<div class="container mt-5 mb-5">
-    <div class="row g-4">
-        <div class="col-lg-8">
-            <div class="sorting-panel mb-4 p-3 bg-white rounded-4 shadow-sm d-flex align-items-center gap-3 flex-wrap">
-                <span class="text-muted small fw-bold text-uppercase">Сортировка:</span>
-                <div class="btn-group">
-                    <button class="btn btn-sm">
-                        Цена (BYN)
-                    </button>
-                    <button class="btn btn-sm">
-                        Время
-                    </button>
-                    <button class="btn btn-sm">
-                        Комфорт
-                    </button>
+@if (_isSearchPerformed)
+{
+    <div class="container mt-5 mb-5">
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="sorting-panel mb-4 p-3 bg-white rounded-4 shadow-sm d-flex align-items-center gap-3 flex-wrap">
+                    <span class="text-muted small fw-bold text-uppercase">Сортировка:</span>
+                    <div class="btn-group">
+                        <button class="btn btn-sm">
+                            Цена (BYN)
+                        </button>
+                        <button class="btn btn-sm">
+                            Время
+                        </button>
+                        <button class="btn btn-sm">
+                            Комфорт
+                        </button>
+                    </div>
+                    <span class="ms-auto text-muted small">
+                        @if (_flights != null && _flights.Any())
+                        {
+                            <span>Найдено рейсов: @_flights.Count</span>
+                        }
+                    </span>
                 </div>
-                <span class="ms-auto text-muted small">
-                    @if (_flights != null && _flights.Any())
-                    {
-                        <span>Найдено рейсов: @_flights.Count</span>
-                    }
-                </span>
-            </div>
 
-            @if (_displayedFlights != null && _displayedFlights.Any())
-            {
-                @foreach (var flight in _displayedFlights)
+                @if (_displayedFlights != null && _displayedFlights.Any())
                 {
-                    <div class="ticket-card shadow-sm mb-4 bg-white animate-fade-in">
-                        <div class="row g-0 align-items-stretch">
-                            <div class="col-md-9 p-4 d-flex align-items-center">
-                                <div class="w-100">
-                                    <div class="flight-route-info">
-                                        <div class="d-flex justify-content-between mb-2">
-                                            <span class="text-muted small fw-bold pe-3">@flight.Status</span>
-                                            <span class="text-muted small fw-bold pe-3">@flight.Schema.FlightNumber</span>
-                                        </div>
-                                        <div class="d-flex align-items-center justify-content-between text-center">
-                                            <div class="text-start" style="min-width: 85px;">
-                                                <div class="h3 fw-bold m-0 text-dark">@flight.Schema.Origin.Code</div>
-                                                <div class="small text-muted text-truncate" style="max-width: 90px;">@flight.Schema.Origin.City.Name</div>
-                                                <div class="small fw-bold text-secondary mt-1">@flight.DepartureDate.ToString("dd MMM")</div>
+                    @foreach (var flight in _displayedFlights)
+                    {
+                        <div class="ticket-card shadow-sm mb-4 bg-white animate-fade-in">
+                            <div class="row g-0 align-items-stretch">
+                                <div class="col-md-9 p-4 d-flex align-items-center">
+                                    <div class="w-100">
+                                        <div class="flight-route-info">
+                                            <div class="d-flex justify-content-between mb-2">
+                                                <span class="text-muted small fw-bold pe-3">@flight.Status</span>
+                                                <span class="text-muted small fw-bold pe-3">@flight.Schema.FlightNumber</span>
                                             </div>
-                                            <div class="flex-grow-1 px-3">
-                                                <div class="mb-1">
-                                                    <span class="small fw-bold text-primary">@flight.Schema.Carrier.Name</span>
+                                            <div class="d-flex align-items-center justify-content-between text-center">
+                                                <div class="text-start" style="min-width: 85px;">
+                                                    <div class="h3 fw-bold m-0 text-dark">@flight.Schema.Origin.Code</div>
+                                                    <div class="small text-muted text-truncate" style="max-width: 90px;">@flight.Schema.Origin.City.Name</div>
+                                                    <div class="small fw-bold text-secondary mt-1">@flight.DepartureDate.ToString("dd MMM")</div>
                                                 </div>
-                                                <div class="mb-2">
-                                                    <span class="h4 fw-bold text-primary">@flight.ActualDepartureTime.ToString("HH:mm")</span>
-                                                    <span class="mx-2 text-muted">—</span>
-                                                    <span class="h4 fw-bold text-primary">@flight.ActualArrivalTime.ToString("HH:mm")</span>
+                                                <div class="flex-grow-1 px-3">
+                                                    <div class="mb-1">
+                                                        <span class="small fw-bold text-primary">@flight.Schema.Carrier.Name</span>
+                                                    </div>
+                                                    <div class="mb-2">
+                                                        <span class="h4 fw-bold text-primary">@flight.ActualDepartureTime.ToString("HH:mm")</span>
+                                                        <span class="mx-2 text-muted">—</span>
+                                                        <span class="h4 fw-bold text-primary">@flight.ActualArrivalTime.ToString("HH:mm")</span>
+                                                    </div>
+                                                    <div class="path-line"><i class="bi bi-airplane-fill"></i></div>
+                                                    <div class="mb-3">
+                                                        <span class="small fw-bold text-muted">@flight.ActualDuration</span>
+                                                    </div>
                                                 </div>
-                                                <div class="path-line"><i class="bi bi-airplane-fill"></i></div>
-                                                <div class="mb-3">
-                                                    <span class="small fw-bold text-muted">@flight.ActualDuration</span>
+                                                <div class="text-end" style="min-width: 85px;">
+                                                    <div class="h3 fw-bold m-0 text-dark">@flight.Schema.Destination.Code</div>
+                                                    <div class="small text-muted text-truncate" style="max-width: 90px;">@flight.Schema.Destination.City.Name</div>
+                                                    <div class="small fw-bold text-secondary mt-1">@flight.DepartureDate.AddMinutes(flight.ActualDuration.TotalMinutes).ToString("dd MMM")</div>
                                                 </div>
-                                            </div>
-                                            <div class="text-end" style="min-width: 85px;">
-                                                <div class="h3 fw-bold m-0 text-dark">@flight.Schema.Destination.Code</div>
-                                                <div class="small text-muted text-truncate" style="max-width: 90px;">@flight.Schema.Destination.City.Name</div>
-                                                <div class="small fw-bold text-secondary mt-1">@flight.DepartureDate.AddMinutes(flight.ActualDuration.TotalMinutes).ToString("dd MMM")</div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div class="col-md-3 p-4 border-start border-dashed bg-light d-flex flex-column justify-content-center text-center price-panel">
-                                <div class="text-muted small mb-1">Цена от</div>
-                                <div class="h2 fw-bold mb-3 text-primary">@flight.BasePrice</div>
-                                <button class="btn btn-warning w-100 fw-bold text-white rounded-pill py-2 shadow-sm">Подробнее</button>
+                                <div class="col-md-3 p-4 border-start border-dashed bg-light d-flex flex-column justify-content-center text-center price-panel">
+                                    <div class="text-muted small mb-1">Цена от</div>
+                                    <div class="h2 fw-bold mb-3 text-primary">@flight.BasePrice</div>
+                                    <button class="btn btn-warning w-100 fw-bold text-white rounded-pill py-2 shadow-sm">Подробнее</button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                }
+                    }
 
-                @if (_displayedFlights.Count < _flights.Count)
+                    @if (_displayedFlights.Count < _flights.Count)
+                    {
+                        <div class="text-center mt-5">
+                            <button class="btn btn-outline-primary px-5 py-3 fw-bold rounded-pill shadow-sm load-more-btn" @onclick="LoadMore">
+                                Показать еще
+                            </button>
+                            <p class="text-muted small mt-2">Показано @_displayedFlights.Count из @_flights.Count рейсов</p>
+                        </div>
+                    }
+                }
+                else
                 {
-                    <div class="text-center mt-5">
-                        <button class="btn btn-outline-primary px-5 py-3 fw-bold rounded-pill shadow-sm load-more-btn" @onclick="LoadMore">
-                            Показать еще
-                        </button>
-                        <p class="text-muted small mt-2">Показано @_displayedFlights.Count из @_flights.Count рейсов</p>
+                    <div class="no-results-card p-5 text-center bg-white rounded-4 border">
+                        <div class="mb-3">
+                            <i class="bi bi-airplane fs-1 text-muted"></i>
+                        </div>
+                        <h5 class="fw-bold text-secondary mb-2">Рейсы не найдены</h5>
+                        <p class="text-muted mb-0">Попробуйте изменить критерии поиска</p>
                     </div>
                 }
-            }
-            else
-            {
-                <div class="no-results-card p-5 text-center bg-white rounded-4 border">
-                    <div class="mb-3">
-                        <i class="bi bi-airplane fs-1 text-muted"></i>
-                    </div>
-                    <h5 class="fw-bold text-secondary mb-2">Рейсы не найдены</h5>
-                    <p class="text-muted mb-0">Попробуйте изменить критерии поиска</p>
-                </div>
-            }
-        </div>
+            </div>
 
-        <div class="col-lg-4 d-none d-lg-block">
-            <!-- Filters Panel -->
-            <div class="filter-panel p-4 bg-white rounded-4 shadow-sm border sticky-top" style="top: 20px;" role="region" aria-label="Фильтры поиска"></div>
+            <div class="col-lg-4 d-none d-lg-block">
+                <!-- Filters Panel -->
+                <div class="filter-panel p-4 bg-white rounded-4 shadow-sm border sticky-top" style="top: 20px;" role="region" aria-label="Фильтры поиска"></div>
+            </div>
         </div>
     </div>
-</div>
+}
+
+
 
 @code {
     // Переменные для хранения выбранных данных
@@ -226,6 +217,8 @@
     private List<FlightInstance> _flights = new();
 
     private FlightSearchModel searchModel = new();
+
+    private bool _isSearchPerformed = false;
 
     private void OnDepartureChanged(DateTime? date)
     {
@@ -258,6 +251,7 @@
             if (_flights.Any())
             {
                 LoadMore();
+                _isSearchPerformed = true; // Триггер анимации и показа результатов
             }
         }
         catch (Exception ex)

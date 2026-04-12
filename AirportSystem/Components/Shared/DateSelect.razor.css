@@ -29,8 +29,6 @@
     align-items: baseline;
     gap: 4px;
     pointer-events: none;
-    line-height: 1.2;
-    height: 24px; /* Фиксированная высота как у текстового инпута */
     white-space: nowrap;
 }
 
