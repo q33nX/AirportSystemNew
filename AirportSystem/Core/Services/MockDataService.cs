@@ -98,4 +98,10 @@ public class MockDataService : IFlightRepository
     {
         return await Task.FromResult(FlightInstances.FirstOrDefault(f => f.Id == id));
     }
+
+    public async Task<List<Airport>> GetAirportsAsync()
+    {
+
+        return await Task.FromResult(Airports);
+    }
 }
