@@ -1,10 +1,18 @@
 using AirportSystem.Components;
+using AirportSystem.Core.Interfaces;
+using AirportSystem.Core.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddScoped<IFlightRepository, MockDataService>();
+builder.Services.AddScoped<IPriceCalculator, PriceCalculatorService>();
+builder.Services.AddScoped<FlightSearchService>();
+builder.Services.AddScoped<IBookingService, BookingService>();
+builder.Services.AddScoped<BookingStateService>();
 
 var app = builder.Build();
 
