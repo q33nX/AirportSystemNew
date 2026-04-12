@@ -1,6 +1,6 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="page">
+@* <div class="page">
     <div class="sidebar">
         <NavMenu />
     </div>
@@ -14,10 +14,119 @@
             @Body
         </article>
     </main>
+</div> *@
+
+<div class="app-container">
+    @* Верхнее меню *@
+    <header>
+        <NavMenu />
+    </header>
+
+    @* Основной контент, который "растягивается" *@
+    <main class="content-wrapper">
+        <div class="container py-4">
+            @Body
+        </div>
+    </main>
+
+    @* КНОПКА НАВЕРХ *@
+    <button id="backToTopBtn" class="back-to-top" onclick="scrollToTop()">
+        <span class="css-arrow-up"></span>
+    </button>
+
+    @* Футер, который всегда внизу *@
+    <footer class="main-footer">
+        <div class="container">
+            <span>&copy; 2026 AirportSystem — Ваш гид в мире путешествий</span>
+        </div>
+    </footer>
 </div>
 
-<div id="blazor-error-ui">
+@* <div id="blazor-error-ui">
     An unhandled error has occurred.
     <a href="" class="reload">Reload</a>
     <a class="dismiss">🗙</a>
-</div>
+</div> *@
+
+<style>
+    /* 1. Делаем контейнер на всю высоту экрана и включаем Flexbox */
+    .app-container {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh; /* Высота всей видимой области */
+        background-color: #f8fafc;
+    }
+
+    /* 2. Этот блок забирает всё свободное место (flex-grow: 1) */
+    .content-wrapper {
+        flex-grow: 1;
+        width: 100%;
+    }
+
+    /* 3. Оформление футера */
+    .main-footer {
+        background-color: white;
+        border-top: 1px solid #e2e8f0;
+        padding: 20px 0;
+        text-align: center;
+        color: #64748b;
+        font-size: 0.875rem;
+    }
+
+    /* Сброс стандартных отступов Blazor */
+    .page {
+        display: block !important;
+    }
+
+    .back-to-top {
+        display: none;
+        position: fixed;
+        bottom: 40px;
+        right: 40px;
+        z-index: 9999;
+        width: 50px;
+        height: 50px;
+        background-color: #ff9241;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+        opacity: 0;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Сама стрелка */
+    .css-arrow-up {
+        position: relative;
+        width: 2px;
+        height: 20px; /* Длина ножки стрелки */
+        background-color: white;
+        display: inline-block;
+    }
+
+    /* Наконечник стрелки (уголок) */
+    .css-arrow-up::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 50%;
+        width: 10px;
+        height: 10px;
+        border-top: 2px solid white;
+        border-left: 2px solid white;
+        transform: translateX(-50%) rotate(45deg); /* Поворачиваем квадрат, чтобы получился угол */
+    }
+
+    /* Эффект при наведении */
+    .back-to-top:hover {
+        background-color: #f08532;
+        transform: translateY(-5px); /* Кнопка чуть подпрыгивает */
+    }
+
+    .back-to-top:hover .css-arrow-up {
+        height: 24px; /* Ножка слегка удлиняется при наведении — живой эффект */
+        transition: 0.2s;
+    }
+</style>

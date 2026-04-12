@@ -1,30 +1,46 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">AirportSystem</a>
+﻿<div class="header-container shadow-sm">
+    <div class="container d-flex align-items-center justify-content-between h-100">
+        @* Логотип *@
+        <a class="navbar-brand d-flex align-items-center fw-bold fs-4 text-white" href="" style="text-decoration: none;">
+            <i class="bi bi-airplane-engines-fill me-2"></i> FLIGHTPLANNER
+        </a>
+
+        @* Ссылки меню *@
+        <div class="d-flex align-items-center h-100">
+            <NavLink class="nav-link header-link" href="" Match="NavLinkMatch.All">Главная</NavLink>
+        </div>
     </div>
 </div>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+<style>
+    .header-container {
+        background-color: #0c73fe;
+        height: 70px;
+        position: relative;
+        z-index: 1000;
+    }
 
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
+    .header-link {
+        color: white !important;
+        opacity: 0.8;
+        transition: 0.3s;
+        font-weight: 500;
+        padding: 0 20px;
+        height: 70px;
+        display: flex;
+        align-items: center;
+        text-decoration: none !important;
+        border-bottom: 4px solid transparent;
+    }
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
+        .header-link:hover {
+            opacity: 1;
+            background-color: rgba(255,255,255,0.1);
+        }
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
-    </nav>
-</div>
-
+        .header-link.active {
+            opacity: 1;
+            border-bottom: 4px solid white;
+            background-color: transparent !important;
+        }
+</style>

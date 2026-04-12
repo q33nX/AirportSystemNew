@@ -1,0 +1,94 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@inject IJSRuntime JSRuntime
+<PageTitle>Home</PageTitle>
+
+@namespace AirportSystem.Components.Pages
+
+<div class="search-section">
+    <div class="container">
+        <h2 class="text-center fw-bold mb-5 text-white">Поиск авиабилетов</h2>
+        <div class="avia-tabs mb-3">
+            @* Используем Enum вместо строк *@
+            <button class="avia-tab @(_currentMode == SearchMode.Roundtrip ? "active" : "")"
+                    @onclick='() => SetSearchMode(SearchMode.Roundtrip)'>
+                Туда и обратно
+            </button>
+            <button class="avia-tab @(_currentMode == SearchMode.MultiCity ? "active" : "")"
+                    @onclick='() => SetSearchMode(SearchMode.MultiCity)'>
+                Сложный маршрут
+            </button>
+        </div>
+
+        <div class="avia-panel shadow-lg">
+            @if (_currentMode == SearchMode.Roundtrip)
+            {
+                <div class="avia-cell border-end">
+                    <label class="avia-label">ОТКУДА</label>
+                    <select class="avia-select" ">
+                        <option value="">Любой город</option>
+                    </select>
+                </div>
+                <div class="avia-cell border-end">
+                    <label class="avia-label">КУДА</label>
+                    <select class="avia-select">
+                        <option value="">Любой город</option>
+                    </select>
+                </div>
+                <div class="avia-cell border-end">
+                    <label class="avia-label">ТУДА</label>
+                    <input type="date" class="avia-input" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="avia-cell border-end">
+                    <label class="avia-label">ОБРАТНО</label>
+                    <input type="date" class="avia-input" />
+                </div>
+                <button type="button" class="btn-search-main">Найти</button>
+            }
+            else
+            {
+                <div class="multi-city-container">
+                    @for (int i = 0; i < Segments.Count; i++)
+                    {
+                        var segmentIndex = i;
+                        <div class="segment-row shadow-sm" @key="Segments[i]">
+                            @* Кнопка удаления в углу *@
+                            @if (Segments.Count > 2)
+                            {
+                                <button type="button" class="btn-remove-corner"
+                                        @onclick="() => RemoveSegment(segmentIndex)"
+                                        title="Удалить перелет">
+                                    <svg xmlns="http://w3.org" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                        <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z" "" ) />>
+                                    </svg>
+                                </button>
+                            }
+
+                            <div class="segment-number-badge">@(i + 1)</div>
+                            <div class="segment-fields">
+                                @* Ваши поля выбора городов и даты *@
+                                <div class="segment-field">
+                                    <select class="segment-select">
+                                        <option value="">Откуда</option>
+                                    </select>
+                                </div>
+                                <div class="segment-arrow">
+                                    <svg>...</svg>
+                                </div>
+                                <div class="segment-field">
+                                    <select class="segment-select">
+                                        <option value="">Куда</option>
+                                    </select>
+                                </div>
+                                <div class="segment-field segment-field-date">
+                                    <input type="date" class="segment-date-input" />
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <button type="button" class="btn-search-main">Найти</button>
+            }
+        </div>
+    </div>
+</div>
