@@ -79,18 +79,18 @@
             <div class="col-lg-8">
                 <div class="sorting-panel mb-4 p-3 bg-white rounded-4 shadow-sm d-flex align-items-center gap-3 flex-wrap">
                     <span class="text-muted small fw-bold text-uppercase">Сортировка:</span>
-                    <div class="btn-group">
-                        <button class="btn btn-sm">
-                            Цена
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sort @(_activeSort == "price" ? "active" : "")" @onclick='() => SetSort("price")'>
+                            Цена <i class="sort-icon @(_activeSort == "price" ? (_isAscending ? "asc" : "desc") : "")"></i>
                         </button>
-                        <button class="btn btn-sm">
-                            Время
+                        <button class="btn btn-sort @(_activeSort == "duration" ? "active" : "")" @onclick='() => SetSort("duration")'>
+                            Время <i class="sort-icon @(_activeSort == "duration" ? (_isAscending ? "asc" : "desc") : "")"></i>
                         </button>
-                        <button class="btn btn-sm">
-                            Комфорт
+                        <button class="btn btn-sort @(_activeSort == "comfort" ? "active" : "")" @onclick='() => SetSort("comfort")'>
+                            Комфорт <i class="sort-icon @(_activeSort == "comfort" ? (_isAscending ? "asc" : "desc") : "")"></i>
                         </button>
                     </div>
-                    <span class="ms-auto text-muted small">
+                    <span class="ms-auto count-badge">
                         @if (_flights != null && _flights.Any())
                         {
                             <span>Найдено рейсов: @_flights.Count</span>
@@ -269,5 +269,45 @@
             .ToList();
 
         _displayedFlights.AddRange(next);
+    }
+
+    private string _activeSort = "price";
+    private bool _isAscending = true;
+
+    private void SetSort(string criterion)
+    {
+        if (_activeSort == criterion)
+        {
+            _isAscending = !_isAscending; // Меняем направление, если кликнули на ту же кнопку
+        }
+        else
+        {
+            _activeSort = criterion;
+            _isAscending = true; // Сбрасываем на "по возрастанию" для нового критерия
+        }
+
+        // Здесь должна быть твоя логика сортировки списка _flights
+        SortFlights();
+    }
+
+    private void SortFlights()
+    {
+        // Пример базовой сортировки (адаптируй под свои поля)
+        if (_activeSort == "price")
+        {
+            _flights = _isAscending
+                ? _flights.OrderBy(f => f.BasePrice).ToList()
+                : _flights.OrderByDescending(f => f.BasePrice).ToList();
+        }
+
+        if (_activeSort == "duration")
+        {
+            _flights = _isAscending
+                ? _flights.OrderBy(f => f.ActualDuration).ToList()
+                : _flights.OrderByDescending(f => f.ActualDuration).ToList();
+        }
+
+        // После сортировки обновляем отображаемые данные
+        _displayedFlights = _flights.Take(_displayedFlights.Count).ToList();
     }
 }

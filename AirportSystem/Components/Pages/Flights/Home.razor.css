@@ -431,3 +431,63 @@
         margin-bottom: 20px;
     }
 }
+
+/* ==========================================================================
+   6. ПАНЕЛЬ СОРТИРОВКИ (MODERN VARIANT)
+   ========================================================================== */
+.sorting-panel {
+    border: 1px solid #edf2f7;
+    transition: all 0.3s ease;
+}
+
+.btn-sort {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #64748b;
+    padding: 8px 20px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 13px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-sort:hover {
+    background: #fff;
+    border-color: #0c73fe;
+    color: #0c73fe;
+    transform: translateY(-1px);
+}
+
+.btn-sort.active {
+    background: #0c73fe;
+    border-color: #0c73fe;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(12, 115, 254, 0.25);
+}
+
+/* Иконки и индикаторы */
+.sort-icon {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transition: transform 0.3s ease;
+    opacity: 0.6;
+}
+
+.sort-icon.asc { transform: rotate(-135deg); opacity: 1; }
+.sort-icon.desc { transform: rotate(45deg); opacity: 1; }
+
+.count-badge span {
+    background: #eff6ff;
+    color: #0c73fe;
+    padding: 6px 14px;
+    border-radius: 30px;
+    font-weight: 800;
+    font-size: 11px;
+    text-transform: uppercase;
+}
