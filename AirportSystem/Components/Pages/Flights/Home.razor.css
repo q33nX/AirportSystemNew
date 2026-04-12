@@ -1,41 +1,28 @@
 ﻿/* ==========================================================================
-   1. ОБЩИЕ СТИЛИ СЕКЦИИ
+   1. ОБЩИЕ СТИЛИ СЕКЦИИ И АНИМАЦИИ
    ========================================================================== */
 .search-section {
-    /*    background: linear-gradient(180deg, #0c73fe 0%, #085ad0 100%);
-    padding: 60px 0 100px 0;
-    margin-top: -24px;
-    transition: opacity 0.25s ease;*/
-/*    margin-top: -24px;*/
     display: flex;
-    padding: 40px 0 40px 0;
-    align-items: center; /* Вертикальное центрирование */
+    padding: 40px 0;
+    align-items: center;
     justify-content: center;
     width: 100%;
-    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1); /* Плавный взлет */
-    background: linear-gradient(180deg, #0c73fe 0%, #085ad0 100%); /* Твой фоновый цвет */
+    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    background: linear-gradient(180deg, #0c73fe 0%, #085ad0 100%);
 }
 
-/* Состояние "На весь экран" */
-.search-section.full-screen {
-    min-height: calc(100vh - 70px); /* Высота до футера (минус высота хедера) */
-}
+    .search-section.full-screen {
+        min-height: calc(100vh - 70px);
+    }
 
-/* Состояние "После поиска" */
-.search-section.mini {
-    min-height: 150px; /* Сжимается до компактного размера */
-/*    padding: 20px 0;*/
-}
+    .search-section.mini {
+        min-height: 150px;
+    }
 
 .search-content {
     width: 100%;
     max-width: 1200px;
     padding: 0 15px;
-}
-
-/* Плавное появление результатов */
-.fade-in {
-    animation: fadeIn 0.8s ease-in forwards;
 }
 
 @keyframes fadeIn {
@@ -50,10 +37,13 @@
     }
 }
 
-/* ==========================================================================
-   2. БЛОК ПОИСКА (AVIA-PANEL) — ОБНОВЛЕНО
-   ========================================================================== */
+.fade-in, .animate-results, .animate-fade-in {
+    animation: fadeIn 0.8s ease-in forwards;
+}
 
+/* ==========================================================================
+   2. БЛОК ПОИСКА (AVIA-PANEL)
+   ========================================================================== */
 .avia-tabs {
     display: flex;
     width: 100%;
@@ -62,46 +52,56 @@
     box-sizing: border-box;
 }
 
-    .avia-tab {
-        padding: 12px 30px;
-        border: none;
-        background: rgba(255, 255, 255, 0.15);
-        color: white;
-        font-weight: 600;
-        cursor: pointer;
-        transition: 0.3s;
-        flex-shrink: 0; /* Чтобы кнопки не сжимались */
+.avia-tab {
+    padding: 12px 30px;
+    border: none;
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+    flex-shrink: 0;
+}
+
+    .avia-tab:first-child {
+        border-radius: 12px 0 0 12px;
     }
 
-        .avia-tab:first-child {
-            border-radius: 12px 0 0 12px;
-        }
+    .avia-tab:last-child {
+        border-radius: 0 12px 12px 0;
+    }
 
-        .avia-tab:last-child {
-            border-radius: 0 12px 12px 0;
-        }
+    .avia-tab.active {
+        background: white;
+        color: #0c73fe;
+    }
 
-        .avia-tab.active {
-            background: white;
-            color: #0c73fe;
-        }
-
-/* Основная белая панель */
 .avia-panel {
     background: white;
     border-radius: 12px;
     display: flex;
     align-items: stretch;
-    width: 100%; /* Важно: заставляем занять всю ширину до max-width */
-    max-width: 1140px; /* Должно быть идентично вкладкам */
-    margin: 0 auto; /* Центрируем */
+    width: 100%;
+    max-width: 1140px;
+    margin: 0 auto;
     min-height: 75px;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
-    border: none !important;
     box-sizing: border-box;
 }
 
-/* Главная кнопка "Найти" */
+    .avia-panel.multi-mode {
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+.main-search-row {
+    display: flex;
+    width: 100%;
+    align-items: stretch;
+}
+
 .btn-search-main {
     background: #ff9241;
     border: none;
@@ -125,59 +125,85 @@
 }
 
 .multi-city-container {
-    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.multi-actions-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
 }
 
 .segment-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 14px;
-    border-radius: 12px;
-    background: #f8fafc;
-    border: 1.5px solid #e2e8f0;
-    margin-bottom: 8px;
-}
-
-.segment-fields {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.segment-field {
-    flex: 1;
-}
-
-.segment-select, .segment-date-input {
-    height: 40px;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 0 10px;
     width: 100%;
-    font-size: 14px;
-    font-weight: 600;
+    display: flex;
+    align-items: stretch;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    transition: box-shadow 0.2s, border-color 0.2s;
+    position: relative;
 }
+
+.btn-remove-segment {
+    position: absolute;
+    right: -12px;
+    top: -12px;
+    background: #fff;
+    color: #94a3b8;
+    border: 1px solid #e2e8f0;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    z-index: 2;
+}
+
+    .btn-remove-segment:hover {
+        color: #ef4444;
+        border-color: #ef4444;
+        transform: scale(1.1);
+    }
 
 .btn-add-segment {
-    width: 100%;
-    padding: 12px;
-    border: 2px dashed #e2e8f0;
-    background: transparent;
+    display: flex;
+    align-items: center;
+    background: rgba(0, 135, 255, 0.05);
+    color: #0087ff;
+    border: 1px solid transparent;
+    padding: 10px 18px;
     border-radius: 10px;
-    color: #64748b;
     font-weight: 600;
-    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
 }
 
     .btn-add-segment:hover {
-        border-color: #0c73fe;
-        background: #f0f7ff;
+        background: rgba(0, 135, 255, 0.1);
+        color: #005fbc;
     }
 
+.btn-search-large {
+    background: #ff7e51;
+    color: white;
+    border: none;
+    padding: 14px 40px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    box-shadow: 0 4px 14px rgba(255, 126, 81, 0.3);
+    transition: all 0.2s;
+}
+
 /* ==========================================================================
-   3. КАРТОЧКИ БИЛЕТОВ (СОХРАНЕНО)
+   3. КАРТОЧКИ БИЛЕТОВ И ДЕТАЛИЗАЦИЯ
    ========================================================================== */
 .ticket-card {
     border-radius: 16px;
@@ -186,6 +212,7 @@
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     margin-top: 30px;
     cursor: pointer;
+    background: #fff;
 }
 
     .ticket-card:hover {
@@ -218,39 +245,47 @@
     border-left: 2px dashed #cbd5e1 !important;
 }
 
-/* ==========================================================================
-   4. ФИЛЬТРЫ И СОРТИРОВКА (СОХРАНЕНО)
-   ========================================================================== */
-.filter-panel {
-    transition: all 0.3s ease;
+.layover-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    position: relative;
 }
 
-.sorting-panel .btn {
+.layover-line {
+    flex: 1;
+    height: 2px;
+    background: repeating-linear-gradient(90deg, #0c73fe 0, #0c73fe 8px, transparent 8px, transparent 16px);
+    opacity: 0.3;
+}
+
+.layover-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #fff;
+    padding: 6px 14px;
+    border-radius: 8px;
     border: 1px solid #e2e8f0;
-    background: white;
-    color: #64748b;
-    font-weight: 600;
+    white-space: nowrap;
+}
+
+.flight-segment-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #eef2ff;
+    color: #4338ca;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
 }
 
 /* ==========================================================================
-   5. ВСПОМОГАТЕЛЬНЫЕ СТИЛИ (Анимации, теги)
-   ========================================================================== */
-.animate-fade-in {
-    animation: fadeIn 0.4s ease-out;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
+   4. ТЕГИ И ФИЛЬТРЫ
+   ========================================================================= */
 .badge-tag {
     padding: 4px 14px;
     border-radius: 20px;
@@ -259,9 +294,6 @@
     text-transform: uppercase;
     color: white;
 }
-
-/* Стили для модалок, оверлеев и т.д. остаются без изменений ниже... */
-
 
 .tag-cheapest {
     background: #2ecc71;
@@ -292,118 +324,44 @@
     background: #ef4444;
 }
 
-.price-panel {
-    background: #f8fafc !important;
-    margin: -1px;
-    border-radius: 0 14px 14px 0;
-    border-left: 2px dashed #cbd5e1 !important;
+.filter-panel {
+    transition: all 0.3s ease;
 }
 
-.path-line {
-    height: 2px;
-    background: #e2e8f0;
-    width: 100%;
-    position: relative;
-    margin: 15px 0;
+.filter-section {
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f1f5f9;
 }
 
-    .path-line i {
-        position: absolute;
-        top: -10px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: white;
-        padding: 0 10px;
-        color: #0c73fe;
-    }
-
-.layover-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 0;
-    position: relative;
-}
-
-.layover-line {
-    flex: 1;
-    height: 2px;
-    background: repeating-linear-gradient(90deg, #0c73fe 0, #0c73fe 8px, transparent 8px, transparent 16px);
-    opacity: 0.3;
-}
-
-.layover-text {
+.filter-checkbox-group {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    background: #fff;
-    padding: 6px 14px;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
-    white-space: nowrap;
+    gap: 2px;
+    overflow-y: auto;
 }
 
-    .layover-text span:first-child {
-        font-size: 11px;
-        color: #94a3b8;
-        font-weight: 600;
-        text-transform: uppercase;
+.filter-range {
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    cursor: pointer;
+    appearance: none;
+    width: 100%;
+}
+
+    .filter-range::-webkit-slider-thumb {
+        appearance: none;
+        background: #0c73fe;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        border: 2px solid white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.15);
     }
 
-.layover-time {
-    font-size: 14px;
-    color: #0c73fe;
-    font-weight: 700;
-}
-
-.flight-segment-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: #eef2ff;
-    color: #4338ca;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 11px;
-    font-weight: 700;
-}
-
-.segment-badge-number {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 20px;
-    height: 20px;
-    background: #0c73fe;
-    color: white;
-    border-radius: 50%;
-    font-size: 11px;
-    font-weight: 700;
-}
-
-.dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    display: inline-block;
-}
-
-.animate-fade-in {
-    animation: fadeIn 0.4s ease-out;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
+/* ==========================================================================
+   5. МОДАЛЬНЫЕ ОКНА
+   ========================================================================== */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -416,18 +374,6 @@
     justify-content: center;
     z-index: 1050;
     padding: 30px;
-    animation: fadeInOverlay 0.25s ease-out;
-    overflow-y: auto;
-}
-
-@keyframes fadeInOverlay {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
 }
 
 .modal-content {
@@ -440,7 +386,6 @@
     position: relative;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
     animation: slideInModal 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-    margin: auto;
 }
 
 @keyframes slideInModal {
@@ -464,485 +409,25 @@
     font-size: 28px;
     color: #94a3b8;
     cursor: pointer;
-    z-index: 10;
 }
 
-    .modal-close:hover {
-        color: #475569;
-    }
-
-.ticket-container {
-    padding: 25px;
-    border: 2px solid #0c73fe;
-    border-radius: 12px;
-    margin: 20px;
-    background: linear-gradient(180deg, #f8fafc 0%, #fff 100%);
-}
-
-.ticket-header {
-    text-align: center;
-    margin-bottom: 20px;
-    padding-bottom: 15px;
-    border-bottom: 1px dashed #cbd5e1;
-}
-
-.ticket-type {
-    font-size: 14px;
-    font-weight: 700;
-    color: #0c73fe;
-    letter-spacing: 2px;
-}
-
-.ticket-airline {
-    font-size: 12px;
-    color: #64748b;
-    margin-top: 5px;
-}
-
-.ticket-route {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 20px;
-}
-
-.route-point {
-    flex: 1;
-    text-align: center;
-}
-
-.route-label {
-    font-size: 8px;
-    color: #94a3b8;
-    letter-spacing: 1px;
-    margin-bottom: 8px;
-}
-
-.route-code {
-    font-size: 24px;
-    font-weight: 700;
-    color: #1e293b;
-}
-
-.route-city {
-    font-size: 10px;
-    color: #64748b;
-    margin-top: 4px;
-}
-
-.route-time {
-    font-size: 11px;
-    color: #0c73fe;
-    font-weight: 600;
-    margin-top: 8px;
-}
-
-.route-divider {
-    flex: 0 0 80px;
-    text-align: center;
-    padding: 0 10px;
-}
-
-.divider-line {
-    height: 2px;
-    background: linear-gradient(90deg, #0c73fe, #94a3b8);
-    position: relative;
-}
-
-.divider-icon {
-    color: #0c73fe;
-    font-size: 16px;
-    margin: 8px 0;
-}
-
-.divider-duration {
-    font-size: 10px;
-    color: #64748b;
-}
-
-.ticket-details {
-    padding: 15px 0;
-    border-top: 1px dashed #cbd5e1;
-    border-bottom: 1px dashed #cbd5e1;
-}
-
-.detail-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 12px;
-    margin-bottom: 8px;
-    color: #475569;
-}
-
-    .detail-row span:last-child {
-        font-weight: 600;
-        color: #1e293b;
-    }
-
-.ticket-price {
-    margin-top: 20px;
-    text-align: center;
-    padding: 15px;
-    background: #eff6ff;
-    border-radius: 8px;
-}
-
-.price-label {
-    font-size: 10px;
-    color: #0c73fe;
-    letter-spacing: 1px;
-    margin-bottom: 5px;
-}
-
-.price-value {
-    font-size: 28px;
-    font-weight: 700;
-    color: #0c73fe;
-}
-
-.flight-segment {
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 15px;
-    margin-bottom: 12px;
-    background: #f8fafc;
-}
-
-.segment-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 12px;
-}
-
-.segment-badge {
-    font-size: 10px;
-    font-weight: 600;
-    color: #0c73fe;
-    background: #eff6ff;
-    padding: 4px 8px;
-    border-radius: 4px;
-}
-
-.segment-flight {
-    font-size: 11px;
-    font-weight: 600;
-    color: #475569;
-}
-
-.segment-route {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.segment-point {
-    flex: 1;
-    text-align: center;
-}
-
-.segment-time {
-    font-size: 16px;
-    font-weight: 700;
-    color: #1e293b;
-}
-
-.segment-date {
-    font-size: 10px;
-    color: #64748b;
-    margin-top: 2px;
-}
-
-.segment-code {
-    font-size: 14px;
-    font-weight: 700;
-    color: #1e293b;
-    margin-top: 6px;
-}
-
-.segment-city {
-    font-size: 9px;
-    color: #64748b;
-    margin-top: 2px;
-}
-
-.segment-line {
-    flex: 0 0 80px;
-    text-align: center;
-    padding: 0 8px;
-}
-
-    .segment-line .line {
-        height: 2px;
-        background: linear-gradient(90deg, #0c73fe, #94a3b8);
-    }
-
-    .segment-line .plane-icon {
-        color: #0c73fe;
-        font-size: 14px;
-        margin: 6px 0;
-    }
-
-    .segment-line .segment-duration {
-        font-size: 9px;
-        color: #64748b;
-    }
-
-.segment-info {
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px dashed #cbd5e1;
-    font-size: 11px;
-    color: #64748b;
-}
-
-.layover-section {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 10px;
-    background: #fffbeb;
-    border-radius: 8px;
-    margin-bottom: 12px;
-}
-
-.layover-icon {
-    font-size: 14px;
-}
-
-.layover-text {
-    font-size: 11px;
-    color: #b45309;
-    font-weight: 500;
-}
-
-.ticket-summary {
-    padding: 12px;
-    background: #f1f5f9;
-    border-radius: 8px;
-    margin-bottom: 12px;
-}
-
-.summary-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 12px;
-    color: #475569;
-    margin-bottom: 6px;
-}
-
-    .summary-row:last-child {
-        margin-bottom: 0;
-    }
-
-    .summary-row span:last-child {
-        font-weight: 600;
-        color: #1e293b;
-    }
-
-.filter-panel {
-    transition: all 0.3s ease;
-}
-
-.filter-section {
-    padding-bottom: 12px;
-    border-bottom: 1px solid #f1f5f9;
-}
-
-    .filter-section:last-of-type {
-        border-bottom: none;
-    }
-
-.filter-range {
-    height: 6px;
-    background: #e2e8f0;
-    border-radius: 3px;
-}
-
-    .filter-range::-webkit-slider-thumb {
-        background: #0c73fe;
-        width: 18px;
-        height: 18px;
-        border-radius: 50%;
-        cursor: pointer;
-    }
-
-.filter-select {
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-}
-
-.filter-checkbox {
-    padding: 4px 0;
-}
-
-    .filter-checkbox .form-check-input {
-        width: 16px;
-        height: 16px;
-        margin-top: 2px;
-    }
-
-.time-filters, .stops-filters {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.airline-list::-webkit-scrollbar {
+/* Скроллбары */
+::-webkit-scrollbar {
     width: 4px;
 }
 
-.airline-list::-webkit-scrollbar-track {
+::-webkit-scrollbar-track {
     background: #f1f5f9;
-    border-radius: 2px;
 }
 
-.airline-list::-webkit-scrollbar-thumb {
+::-webkit-scrollbar-thumb {
     background: #cbd5e1;
     border-radius: 2px;
 }
-
-.time-badge {
-    font-size: 12px;
-}
-
-.smart-suggestions {
-    padding: 8px 0;
-}
-
-.smart-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-
-.filter-divider {
-    margin: 16px 0;
-    border: none;
-    border-top: 1px solid #e2e8f0;
-    opacity: 0.7;
-}
-
-.filter-checkbox-group {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-    .filter-checkbox-group .form-check {
-        margin: 0;
-        min-height: auto;
-        padding: 4px 0;
-    }
-
-    .filter-checkbox-group .form-check-input {
-        width: 16px;
-        height: 16px;
-        min-width: 16px;
-        margin: 0;
-        cursor: pointer;
-        transition: all 0.15s ease;
-    }
-
-        .filter-checkbox-group .form-check-input:focus {
-            box-shadow: 0 0 0 3px rgba(12, 115, 254, 0.15);
-            outline: none;
-        }
-
-        .filter-checkbox-group .form-check-input:checked {
-            background-color: #0c73fe;
-            border-color: #0c73fe;
-        }
-
-    .filter-checkbox-group .form-check-label {
-        cursor: pointer;
-        color: #475569;
-        transition: color 0.15s ease;
-    }
-
-        .filter-checkbox-group .form-check-label:hover {
-            color: #1e293b;
-        }
-
-.filter-range {
-    height: 6px;
-    background: #e2e8f0;
-    border-radius: 3px;
-    cursor: pointer;
-}
-
-    .filter-range::-webkit-slider-thumb {
-        background: #0c73fe;
-        width: 18px;
-        height: 18px;
-        border-radius: 50%;
-        cursor: pointer;
-        border: 2px solid white;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-        transition: transform 0.15s ease;
-    }
-
-        .filter-range::-webkit-slider-thumb:hover {
-            transform: scale(1.1);
-        }
-
-        .filter-range::-webkit-slider-thumb:focus {
-            box-shadow: 0 0 0 3px rgba(12, 115, 254, 0.25);
-        }
-
-.filter-select {
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: border-color 0.15s ease;
-}
-
-    .filter-select:focus {
-        border-color: #0c73fe;
-        box-shadow: 0 0 0 3px rgba(12, 115, 254, 0.1);
-    }
-
-.btn:focus {
-    box-shadow: 0 0 0 3px rgba(12, 115, 254, 0.25);
-}
-
-.filter-checkbox-group::-webkit-scrollbar {
-    width: 4px;
-}
-
-.filter-checkbox-group::-webkit-scrollbar-track {
-    background: #f1f5f9;
-    border-radius: 2px;
-}
-
-.filter-checkbox-group::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 2px;
-}
-
-    .filter-checkbox-group::-webkit-scrollbar-thumb:hover {
-        background: #94a3b8;
-    }
 
 @media (max-width: 991px) {
     .filter-panel {
         position: static;
         margin-bottom: 20px;
-    }
-}
-
-:focus-visible {
-    outline: 2px solid #0c73fe;
-    outline-offset: 2px;
-}
-
-@media (prefers-contrast: high) {
-    .filter-checkbox-group .form-check-input {
-        border-width: 2px;
-    }
-
-    .filter-divider {
-        border-top-width: 2px;
     }
 }

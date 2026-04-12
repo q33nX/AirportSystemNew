@@ -28,12 +28,9 @@ namespace AirportSystem.Components.Pages // Проверьте ваш namespace
             }
         }
 
-        private void RemoveSegment(int index)
+        private void RemoveSegment(FlightSchema segment)
         {
-            if (Segments.Count > 2 && index < Segments.Count)
-            {
-                Segments.RemoveAt(index);
-            }
+            Segments.Remove(segment);
         }
     }
 }

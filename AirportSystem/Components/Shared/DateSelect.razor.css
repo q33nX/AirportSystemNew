@@ -16,6 +16,16 @@
         background-color: #f8fafc;
     }
 
+    /* Убираем границу у последней ячейки перед кнопкой */
+    .avia-cell.border-end:last-of-type {
+        border-right: none !important;
+    }
+
+    .avia-cell:last-child {
+        border-top-right-radius: 12px;
+        border-bottom-right-radius: 12px;
+    }
+
 .input-wrapper {
     position: relative;
     width: 100%;
