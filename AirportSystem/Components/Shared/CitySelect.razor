@@ -56,9 +56,11 @@
         }
 
         Suggestions = Cities
-            .Where(c => c.Name.Contains(Query, StringComparison.OrdinalIgnoreCase))
-            .Take(5)
-            .ToList();
+        .Where(c => c.Name.Contains(Query, StringComparison.OrdinalIgnoreCase) ||
+                    c.Country.Contains(Query, StringComparison.OrdinalIgnoreCase) ||
+                    c.IATACode.Contains(Query, StringComparison.OrdinalIgnoreCase))
+        .Take(10)
+        .ToList();
 
         ShowSuggestions = Suggestions.Any();
     }

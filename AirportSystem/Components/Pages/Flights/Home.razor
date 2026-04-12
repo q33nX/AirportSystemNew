@@ -41,10 +41,12 @@
 
                 <DateSelect Placeholder="Когда"
                             SelectedDate="@_departureDate"
-                            OnDateSelected="@(d => _departureDate = d)" />
+                            MinDate="@DateTime.Now"
+                            OnDateSelected="@OnDepartureChanged" />
 
                 <DateSelect Placeholder="Обратно"
-                            SelectedDate="@(_returnDate ?? DateTime.Now.AddYears(100))"
+                            SelectedDate="@_returnDate"
+                            MinDate="@(_departureDate ?? DateTime.Now)"
                             OnDateSelected="@(d => _returnDate = d)" />
 
                 <button type="button" class="btn-search-main" @onclick="() => HandleSearch()">Найти</button>
@@ -209,16 +211,13 @@
     private City? _arrivalCity;
 
     // Инициализируем даты, чтобы не было ошибок
-    private DateTime _departureDate = DateTime.Now;
-    private DateTime? _returnDate; // Nullable, если обратный билет не обязателен
+    private DateTime? _departureDate;
+    private DateTime? _returnDate;
 
     private List<City> _cities = new();
 
     private int pageSize = 10;
     private string today = DateTime.Today.ToString("yyyy-MM-dd");
-
-    private DateTime? departureDate;
-    private DateTime? returnDate;
 
     private bool _isSearching = false;
 
@@ -227,6 +226,18 @@
     private List<FlightInstance> _flights = new();
 
     private FlightSearchModel searchModel = new();
+
+    private void OnDepartureChanged(DateTime? date)
+    {
+        _departureDate = date;
+
+        // Если дата возврата уже выбрана И она стала раньше новой даты вылета
+        if (_returnDate.HasValue && _departureDate.HasValue && _returnDate < _departureDate)
+        {
+            // Сбрасываем дату возврата в null, чтобы сработал плейсхолдер
+            _returnDate = null;
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -242,7 +253,7 @@
         try
         {
             // Обращаемся к сервису, а не напрямую к источнику данных
-            _flights = await FlightSearchService.GetAvailableFlightsAsync();
+            _flights = await FlightSearchService.SearchFlights(_departureCity, _arrivalCity, _departureDate );
 
             if (_flights.Any())
             {

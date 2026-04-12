@@ -106,17 +106,6 @@
     border-radius: 4px;
 }
 
-/* Подписи (ОТКУДА, КУДА...) */
-.avia-label {
-    font-size: 10px;
-    font-weight: 800;
-    color: #94a3b8;
-    text-transform: uppercase;
-    margin-bottom: 2px;
-    letter-spacing: 0.5px;
-    pointer-events: none;
-}
-
 /* Сброс стилей для инпутов (УБИРАЕМ СТРЕЛКИ И СПИСКИ) */
 .avia-input-text,
 .avia-input-date {
@@ -149,7 +138,7 @@
     }
 
     .avia-input-text::placeholder {
-        color: #cbd5e1;
+        color: #808080;
         font-weight: 400;
     }
 

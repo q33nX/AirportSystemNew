@@ -16,16 +16,6 @@
         background-color: #f8fafc;
     }
 
-.avia-label {
-    font-size: 10px;
-    font-weight: 800;
-    color: #94a3b8;
-    text-transform: uppercase;
-    margin-bottom: 2px;
-    letter-spacing: 0.5px;
-    pointer-events: none;
-}
-
 .input-wrapper {
     position: relative;
     width: 100%;
@@ -47,7 +37,6 @@
 /* Нативный инпут — невидимый слой над всей ячейкой */
 .avia-input-date-native {
     position: absolute;
-    top: -12px;
     left: -25px;
     width: calc(100% + 50px);
     height: 75px;
@@ -70,7 +59,7 @@
 }
 
 .placeholder-text {
-    color: #cbd5e1;
+    color: #808080;
     font-weight: 400;
 }
 
