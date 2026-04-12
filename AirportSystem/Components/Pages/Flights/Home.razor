@@ -173,8 +173,134 @@
             </div>
 
             <div class="col-lg-4 d-none d-lg-block">
-                <!-- Filters Panel -->
-                <div class="filter-panel p-4 bg-white rounded-4 shadow-sm border sticky-top" style="top: 20px;" role="region" aria-label="Фильтры поиска"></div>
+                <div class="filter-panel p-4 bg-white rounded-4 shadow-sm border sticky-top" style="top: 20px;" role="region" aria-label="Фильтры поиска">
+                    <div class="filter-header d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="fw-bold m-0 text-dark">
+                            <i class="bi bi-sliders2-vertical me-2 text-primary"></i>Фильтры
+                        </h5>
+                        <button class="btn btn-link btn-sm text-decoration-none p-0 filter-reset-btn">Сбросить все</button>
+                    </div>
+
+                    <div class="filter-section mb-4">
+                        <label class="filter-label">Класс обслуживания</label>
+                        <div class="class-selector">
+                            <input type="radio" name="flightClass" id="econ" checked>
+                            <label for="econ">Эконом</label>
+
+                            <input type="radio" name="flightClass" id="comf">
+                            <label for="econ">Комфорт</label>
+
+                            <input type="radio" name="flightClass" id="biz">
+                            <label for="biz">Бизнес</label>
+
+                            <input type="radio" name="flightClass" id="first">
+                            <label for="first">Первый</label>
+                        </div>
+                    </div>
+
+                    <div class="filter-section mb-4">
+                        <label class="filter-label">Дни вылета</label>
+                        <div class="days-grid">
+                            <label class="day-item"><input type="checkbox"><span>Пн</span></label>
+                            <label class="day-item"><input type="checkbox"><span>Вт</span></label>
+                            <label class="day-item"><input type="checkbox"><span>Ср</span></label>
+                            <label class="day-item"><input type="checkbox"><span>Чт</span></label>
+                            <label class="day-item"><input type="checkbox" checked><span>Пт</span></label>
+                            <label class="day-item"><input type="checkbox" checked><span>Сб</span></label>
+                            <label class="day-item"><input type="checkbox"><span>Вс</span></label>
+                        </div>
+                    </div>
+
+                    <div class="filter-section mb-4">
+                        <label class="filter-label">Пересадки</label>
+                        <div class="filter-stack">
+                            <div class="custom-check-item">
+                                <label class="check-container">
+                                    <span class="check-text">Без пересадок</span>
+                                    <span class="check-price">от 14 500 ₽</span>
+                                    <input type="checkbox" checked>
+                                    <span class="checkmark"></span>
+                                </label>
+                            </div>
+                            <div class="custom-check-item">
+                                <label class="check-container">
+                                    <span class="check-text">1 пересадка</span>
+                                    <span class="check-price">от 8 200 ₽</span>
+                                    <input type="checkbox">
+                                    <span class="checkmark"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="filter-section mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <label class="filter-label m-0">Цена</label>
+                            <span class="price-value-badge">до 120 000 ₽</span>
+                        </div>
+                        <input type="range" class="styled-range" min="5000" max="250000" step="1000">
+                        <div class="d-flex justify-content-between mt-2">
+                            <span class="range-limit">5 000</span>
+                            <span class="range-limit">250 000</span>
+                        </div>
+                    </div>
+
+                    <div class="filter-section mb-4">
+                        <label class="filter-label">Авиакомпании</label>
+                        <div class="filter-scroll-area">
+                            <div class="custom-check-item">
+                                <label class="check-container">
+                                    <span class="check-text">Aeroflot</span>
+                                    <input type="checkbox" checked>
+                                    <span class="checkmark"></span>
+                                </label>
+                            </div>
+                            <div class="custom-check-item">
+                                <label class="check-container">
+                                    <span class="check-text">S7 Airlines</span>
+                                    <input type="checkbox">
+                                    <span class="checkmark"></span>
+                                </label>
+                            </div>
+                            <div class="custom-check-item">
+                                <label class="check-container">
+                                    <span class="check-text">Turkish Airlines</span>
+                                    <input type="checkbox">
+                                    <span class="checkmark"></span>
+                                </label>
+                            </div>
+                            <div class="custom-check-item">
+                                <label class="check-container">
+                                    <span class="check-text">Emirates</span>
+                                    <input type="checkbox">
+                                    <span class="checkmark"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="filter-section">
+                        <label class="filter-label">Время вылета</label>
+                        <div class="time-grid">
+                            <button class="time-chip active">
+                                <i class="bi bi-brightness-alt-high"></i>
+                                <span>Утро</span>
+                            </button>
+                            <button class="time-chip">
+                                <i class="bi bi-sun"></i>
+                                <span>День</span>
+                            </button>
+                            <button class="time-chip">
+                                <i class="bi bi-moon-stars"></i>
+                                <span>Вечер</span>
+                            </button>
+                            <button class="time-chip">
+                                <i class="bi bi-cloud-moon"></i>
+                                <span>Ночь</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

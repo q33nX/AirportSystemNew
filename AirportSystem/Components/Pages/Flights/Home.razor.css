@@ -491,3 +491,270 @@
     font-size: 11px;
     text-transform: uppercase;
 }
+
+
+
+/* ==========================================================================
+   7. ПАНЕЛЬ ФИЛЬТРОВ
+   ========================================================================== */
+.filter-panel {
+    background: #fff;
+    border: 1px solid #eef2f6 !important;
+}
+
+.filter-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #94a3b8;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+}
+
+.filter-reset-btn {
+    font-size: 12px;
+    font-weight: 700;
+    color: #0c73fe;
+    text-decoration: none;
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+/* --- КЛАСС ОБСЛУЖИВАНИЯ (SEGMENTED CONTROL) --- */
+.class-selector {
+    display: flex;
+    background: #f1f5f9;
+    padding: 4px;
+    border-radius: 12px;
+    gap: 2px;
+}
+
+    .class-selector input {
+        display: none;
+    }
+
+    .class-selector label {
+        flex: 1;
+        text-align: center;
+        padding: 8px 4px;
+        font-size: 12px;
+        font-weight: 700;
+        color: #64748b;
+        cursor: pointer;
+        border-radius: 8px;
+        transition: all 0.2s;
+        margin: 0;
+    }
+
+    .class-selector input:checked + label {
+        background: #fff;
+        color: #0c73fe;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+/* --- ЧЕКБОКСЫ (ПЕРЕСАДКИ, АВИАКОМПАНИИ) --- */
+.filter-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.check-container {
+    display: flex;
+    align-items: center;
+    position: relative;
+    padding-left: 28px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #475569;
+    user-select: none;
+    min-height: 24px;
+}
+
+    .check-container input {
+        position: absolute;
+        opacity: 0;
+    }
+
+.checkmark {
+    position: absolute;
+    top: 3px; /* Центрирование относительно текста */
+    left: 0;
+    height: 18px;
+    width: 18px;
+    background: #f1f5f9;
+    border-radius: 5px;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s;
+}
+
+.check-container:hover input ~ .checkmark {
+    border-color: #0c73fe;
+}
+
+.check-container input:checked ~ .checkmark {
+    background: #0c73fe;
+    border-color: #0c73fe;
+}
+
+.checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+    left: 6px;
+    top: 2px;
+    width: 4px;
+    height: 8px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.check-container input:checked ~ .checkmark:after {
+    display: block;
+}
+
+.check-price {
+    margin-left: auto;
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+/* --- ДНИ НЕДЕЛИ --- */
+.days-grid {
+    display: flex;
+    justify-content: space-between;
+    gap: 5px;
+}
+
+.day-item input {
+    display: none;
+}
+
+.day-item span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid #e2e8f0;
+    font-size: 11px;
+    font-weight: 700;
+    color: #64748b;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.day-item input:checked + span {
+    background: #0c73fe;
+    color: #fff;
+    border-color: #0c73fe;
+}
+
+.day-item:hover span {
+    border-color: #0c73fe;
+    color: #0c73fe;
+}
+
+.day-item input:checked:hover span {
+    color: #fff;
+}
+
+/* --- СЛАЙДЕР ЦЕНЫ --- */
+.price-value-badge {
+    background: #eff6ff;
+    color: #0c73fe;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.styled-range {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 5px;
+    background: #f1f5f9;
+    border-radius: 10px;
+    outline: none;
+}
+
+    .styled-range::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 18px;
+        height: 18px;
+        background: #0c73fe;
+        border: 3px solid #fff;
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(12, 115, 254, 0.3);
+    }
+
+.range-limit {
+    font-size: 11px;
+    color: #cbd5e1;
+    font-weight: 600;
+}
+
+/* --- СЕТКА ВРЕМЕНИ (ЧИПСЫ) --- */
+.time-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.time-chip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+    .time-chip i {
+        font-size: 1.1rem;
+        color: #94a3b8;
+    }
+
+    .time-chip:hover {
+        border-color: #0c73fe;
+        color: #0c73fe;
+    }
+
+    .time-chip.active {
+        background: #eff6ff;
+        border-color: #0c73fe;
+        color: #0c73fe;
+    }
+
+        .time-chip.active i {
+            color: #0c73fe;
+        }
+
+/* --- ВСПОМОГАТЕЛЬНЫЕ --- */
+.filter-scroll-area {
+    max-height: 180px;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+    .filter-scroll-area::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .filter-scroll-area::-webkit-scrollbar-thumb {
+        background: #e2e8f0;
+        border-radius: 10px;
+    }
