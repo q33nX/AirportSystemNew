@@ -23,6 +23,7 @@
     height: auto;
 }
 
+
     .avia-panel:has(.multi-city-container) {
         display: block;
         padding: 16px 24px 16px 24px;
