@@ -758,3 +758,123 @@
         background: #e2e8f0;
         border-radius: 10px;
     }
+
+
+
+.avia-modal-backdrop {
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(20px);
+}
+
+/* Кастомный размер модалки для "простора" */
+.custom-modal-size {
+    max-width: 1200px;
+}
+
+.rounded-5 {
+    border-radius: 2rem !important;
+}
+
+/* Анимация появления */
+.modal.show {
+    animation: modal-entrance 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modal-entrance {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Декоративные элементы */
+.segment-box {
+    transition: transform 0.2s ease;
+}
+
+    .segment-box:hover {
+        transform: translateX(5px);
+    }
+
+.btn-check:checked + .btn-outline-primary {
+    background-color: var(--bs-primary);
+    color: white;
+    box-shadow: 0 8px 20px rgba(var(--bs-primary-rgb), 0.3);
+}
+
+.price-card {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Скроллбар */
+.modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+/* Гарантируем, что модалка будет широкой и по центру */
+.custom-modal-size {
+    width: 95vw !important; /* Почти вся ширина экрана */
+    max-width: 1200px !important;
+    margin: auto;
+}
+
+/* Фикс для колонок, чтобы они не сжимались */
+.modal-body .row.g-0 {
+    display: flex;
+    flex-wrap: nowrap; /* Запрещаем перенос колонок на маленьких экранах, если хотим простора */
+    min-height: 600px;
+}
+
+/* Чтобы контент внутри колонок не слипался */
+.col-lg-7, .col-lg-5 {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* Исправляем наложение темной плашки внизу */
+.price-card {
+    margin-top: auto; /* Прижимает цену к низу правой колонки */
+}
+
+
+
+
+/* Стили для кнопок пассажиров */
+.btn-passenger {
+    width: 32px;
+    height: 32px;
+    border-radius: 50% !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #0c73fe;
+    transition: all 0.2s ease;
+    padding: 0;
+}
+
+    .btn-passenger:hover:not(:disabled) {
+        background-color: #0c73fe;
+        color: white;
+        border-color: #0c73fe;
+    }
+
+    .btn-passenger:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        background-color: #f1f5f9;
+        color: #94a3b8;
+    }

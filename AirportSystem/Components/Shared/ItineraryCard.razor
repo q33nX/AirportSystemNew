@@ -1,0 +1,41 @@
+﻿@using AirportSystem.Core.Entities
+
+@code {
+    [Parameter] public Itinerary Data { get; set; } = null!;
+}
+
+<div class="ticket-card">
+    <div class="route-info">
+        <div class="departure">
+            <h3>@Data.DepartureTime.ToString("HH:mm")</h3>
+            <p>@Data.Flights.First().Schema.Origin.City.Name</p>
+        </div>
+
+        <div class="duration-block">
+            <p>В пути: @Data.TotalDuration.ToString(@"hh\:mm")</p>
+            <div class="line"></div>
+
+            @if (Data.StopsCount > 0)
+            {
+                <span class="badge-transfer">
+                    @Data.StopsCount пересадка
+                    (@string.Join(", ", Data.GetTransferCities()))
+                </span>
+            }
+            else
+            {
+                <span class="badge-direct">Прямой</span>
+            }
+        </div>
+
+        <div class="arrival">
+            <h3>@Data.ArrivalTime.ToString("HH:mm")</h3>
+            <p>@Data.Flights.Last().Schema.Destination.City.Name</p>
+        </div>
+    </div>
+
+    <div class="price-section">
+        <h2 class="price">@Data.TotalBasePrice.ToString("N0") ₸</h2>
+        <button >Выбрать</button>
+    </div>
+</div>
