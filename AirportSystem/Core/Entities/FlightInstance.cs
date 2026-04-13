@@ -20,9 +20,20 @@ public class FlightInstance
         OverriddenDepartureTime ?? DepartureDate.Add(Schema.DepartureTime);
 
     public DateTime ActualArrivalTime =>
-        OverriddenArrivalTime ?? DepartureDate.Add(Schema.DepartureTime).Add(Schema.ArrivalOffset);
+        OverriddenArrivalTime ?? ActualDepartureTime.Add(Schema.ArrivalOffset);
 
-    public TimeSpan ActualDuration => ActualArrivalTime - ActualDepartureTime;
+    public TimeSpan ActualDuration => Schema.ArrivalOffset;
+
+    // Время вылета по часам аэропорта отправления
+    public DateTime LocalDepartureTime =>
+        ActualDepartureTime.AddHours(Schema.Origin.TimezoneOffset);
+
+    // Время прилета по часам аэропорта прибытия
+    public DateTime LocalArrivalTime =>
+        ActualArrivalTime.AddHours(Schema.Destination.TimezoneOffset);
+
+    // Полезно для UI: Проверка, прилетаем ли мы на следующий день (относительно местного времени вылета)
+    public bool ArrivesNextDay => LocalArrivalTime.Date > LocalDepartureTime.Date;
 
     public Aircraft Aircraft { get; init; } = null!;
     public decimal BasePrice { get; set; }

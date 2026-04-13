@@ -70,40 +70,43 @@ public class FlightSearchService
 
     public List<FlightInstance> ApplyFilters(List<FlightInstance> allFlights, FlightFilterModel filters)
     {
-        var query = allFlights.AsQueryable();
+        // Используем AsEnumerable, так как у нас уже List в памяти
+        var query = allFlights.AsEnumerable();
 
-        // Фильтр по цене
+        // 1. Цена (самый быстрый фильтр)
         query = query.Where(f => f.BasePrice <= filters.MaxPrice);
 
-        // Фильтр по авиакомпаниям (если что-то выбрано)
+        // 2. Авиакомпании (сравнение по IATACode, чтобы избежать проблем с ссылками)
         if (filters.SelectedAirlines.Any())
         {
-            query = query.Where(f => filters.SelectedAirlines.Contains(f.Schema.Carrier));
+            var selectedCodes = filters.SelectedAirlines.Select(a => a.IATACode).ToHashSet();
+            query = query.Where(f => selectedCodes.Contains(f.Schema.Carrier.IATACode));
         }
 
-        // Фильтр по дням недели
+        // 3. Дни недели (смотрим на ActualDepartureTime, так как это реальный вылет)
         if (filters.SelectedDays.Any())
         {
-            query = query.Where(f => f.Schema.OperatingDays.Any(day => filters.SelectedDays.Contains(day)));
+            query = query.Where(f => filters.SelectedDays.Contains(f.ActualDepartureTime.DayOfWeek));
         }
 
-        // Логика времени суток
+        // 4. Время суток (используем ActualDepartureTime)
         if (filters.SelectedTimeSlots.Any())
         {
             query = query.Where(f =>
-                (filters.SelectedTimeSlots.Contains("Morning") && f.ActualDepartureTime.Hour >= 6 && f.ActualDepartureTime.Hour < 12) ||
-                (filters.SelectedTimeSlots.Contains("Day") && f.ActualDepartureTime.Hour >= 12 && f.ActualDepartureTime.Hour < 18) ||
-                (filters.SelectedTimeSlots.Contains("Evening") && f.ActualDepartureTime.Hour >= 18 && f.ActualDepartureTime.Hour < 24) ||
-                (filters.SelectedTimeSlots.Contains("Night") && f.ActualDepartureTime.Hour >= 0 && f.ActualDepartureTime.Hour < 6)
-            );
+            {
+                int hour = f.ActualDepartureTime.Hour;
+                return (filters.SelectedTimeSlots.Contains("Morning") && hour >= 6 && hour < 12) ||
+                       (filters.SelectedTimeSlots.Contains("Day") && hour >= 12 && hour < 18) ||
+                       (filters.SelectedTimeSlots.Contains("Evening") && hour >= 18 && hour < 24) ||
+                       (filters.SelectedTimeSlots.Contains("Night") && (hour >= 0 && hour < 6));
+            });
         }
 
-        // Фильтр по классу обслуживания
+        // 5. Класс обслуживания (наша новая оптимизация)
         if (filters.SelectedClasses.Any())
         {
-            query = query.Where(f => f.Aircraft.Seats.Any(seat => filters.SelectedClasses.Contains(seat.Class)));
-            // Если же ты проверяешь наличие свободных мест конкретного класса:
-            // query = query.Where(f => f.AvailableSeats.Any(s => s.Type == filters.SelectedClass && s.Count > 0));
+            // Проверяем, есть ли в самолете хотя бы один из выбранных классов
+            query = query.Where(f => f.Aircraft.AvailableClasses.Overlaps(filters.SelectedClasses));
         }
 
         return query.ToList();

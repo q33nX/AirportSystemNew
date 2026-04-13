@@ -116,16 +116,16 @@
                                                 <div class="text-start" style="min-width: 85px;">
                                                     <div class="h3 fw-bold m-0 text-dark">@flight.Schema.Origin.Code</div>
                                                     <div class="small text-muted text-truncate" style="max-width: 90px;">@flight.Schema.Origin.City.Name</div>
-                                                    <div class="small fw-bold text-secondary mt-1">@flight.DepartureDate.ToString("dd MMM")</div>
+                                                    <div class="small fw-bold text-secondary mt-1">@flight.LocalDepartureTime.ToString("dd MMM")</div>
                                                 </div>
                                                 <div class="flex-grow-1 px-3">
                                                     <div class="mb-1">
                                                         <span class="small fw-bold text-primary">@flight.Schema.Carrier.Name</span>
                                                     </div>
                                                     <div class="mb-2">
-                                                        <span class="h4 fw-bold text-primary">@flight.ActualDepartureTime.ToString("HH:mm")</span>
+                                                        <span class="h4 fw-bold text-primary">@flight.LocalDepartureTime.ToString("HH:mm")</span>
                                                         <span class="mx-2 text-muted">—</span>
-                                                        <span class="h4 fw-bold text-primary">@flight.ActualArrivalTime.ToString("HH:mm")</span>
+                                                        <span class="h4 fw-bold text-primary">@flight.LocalArrivalTime.ToString("HH:mm")</span>
                                                     </div>
                                                     <div class="path-line"><i class="bi bi-airplane-fill"></i></div>
                                                     <div class="mb-3">
@@ -135,7 +135,7 @@
                                                 <div class="text-end" style="min-width: 85px;">
                                                     <div class="h3 fw-bold m-0 text-dark">@flight.Schema.Destination.Code</div>
                                                     <div class="small text-muted text-truncate" style="max-width: 90px;">@flight.Schema.Destination.City.Name</div>
-                                                    <div class="small fw-bold text-secondary mt-1">@flight.DepartureDate.AddMinutes(flight.ActualDuration.TotalMinutes).ToString("dd MMM")</div>
+                                                    <div class="small fw-bold text-secondary mt-1">@flight.LocalArrivalTime.ToString("dd MMM")</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -260,11 +260,20 @@
                             <label class="filter-label m-0">Цена</label>
                             <span class="price-value-badge">до @_filters.MaxPrice.ToString("N0") ₽</span>
                         </div>
-                        <input type="range" class="styled-range" min="5000" max="250000" step="1000"
-                               @bind="_filters.MaxPrice" @bind:event="oninput" @onchange="OnFilterChanged">
+
+                        @* Используем @_minFoundPrice и @_maxFoundPrice в атрибутах *@
+                        <input type="range" class="styled-range"
+                               min="@((double)_minFoundPrice)"
+                               max="@((double)_maxFoundPrice)"
+                               step="100"
+                               @bind="_filters.MaxPrice"
+                               @bind:event="oninput"
+                               @onchange="OnFilterChanged">
+
                         <div class="d-flex justify-content-between mt-2">
-                            <span class="range-limit">5 000</span>
-                            <span class="range-limit">250 000</span>
+                            @* Текстовые подписи тоже делаем динамическими *@
+                            <span class="range-limit">@_minFoundPrice.ToString("N0")</span>
+                            <span class="range-limit">@_maxFoundPrice.ToString("N0")</span>
                         </div>
                     </div>
 
@@ -309,6 +318,9 @@
     private string _activeSort = "price";
     private bool _isAscending = true;
 
+    private decimal _minFoundPrice; // Минимальная цена в текущем поиске
+    private decimal _maxFoundPrice; // Максимальная цена в текущем поиске
+
     protected override async Task OnInitializedAsync()
     {
         _cities = await FlightSearchService.GetAvailableCitiesAsync();
@@ -327,8 +339,20 @@
             // 1. Получаем данные из сервиса
             _allFoundFlights = await FlightSearchService.SearchFlights(_departureCity, _arrivalCity, _departureDate);
 
+            // ВЫЧИСЛЯЕМ ГРАНИЦЫ ЦЕН ДЛЯ ФИЛЬТРА
+            if (_allFoundFlights.Any())
+            {
+                _minFoundPrice = _allFoundFlights.Min(f => f.BasePrice);
+                _maxFoundPrice = _allFoundFlights.Max(f => f.BasePrice);
+            }
+            else
+            {
+                _minFoundPrice = 0;
+                _maxFoundPrice = 250000;
+            }
+
             // 2. Сбрасываем фильтры при новом глобальном поиске
-            _filters = new FlightFilterModel();
+            _filters = new FlightFilterModel { MaxPrice = _maxFoundPrice };
 
             // 3. Применяем фильтрацию и отображаем
             ApplyAllChanges();
@@ -398,7 +422,10 @@
 
     private void ResetFilters()
     {
-        _filters = new FlightFilterModel();
+        _filters = new FlightFilterModel
+        {
+            MaxPrice = _maxFoundPrice + 1000 // Сбрасываем к максимуму текущей выдачи
+        };
         ApplyAllChanges();
     }
 
