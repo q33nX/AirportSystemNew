@@ -9,10 +9,11 @@
 
 @inject FlightSearchService FlightSearchService
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Поиск авиабилетов</PageTitle>
 
 @namespace AirportSystem.Components.Pages
 
+<!-- Модальное окно для конкретного маршрута -->
 @if (_selectedItinerary != null)
 {
     <div class="modal fade show d-block avia-modal-backdrop" tabindex="-1" @onclick="CloseDetails">
@@ -197,6 +198,7 @@
 }
 
 
+<!-- Блок поиска (режимы: Туда и обратно; сложный маршрут) -->
 <div class="search-section @(_isSearchPerformed ? "mini" : "full-screen")">
     <div class="container">
         <h2 class="text-center fw-bold mb-5 text-white">Поиск авиабилетов</h2>
@@ -257,267 +259,286 @@
     </div>
 </div>
 
+<!-- Блок сортировки, фильтрации и вывода маршрутов -->
 @if (_isSearchPerformed)
 {
-    <div class="container mt-5 mb-5 animate-results">
-        <div class="row g-4">
-            <div class="col-lg-8">
-                <div class="sorting-panel mb-4 p-3 bg-white rounded-4 shadow-sm d-flex align-items-center gap-3 flex-wrap">
-                    <span class="text-muted small fw-bold text-uppercase">Сортировка:</span>
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-sort @(_activeSort == "price" ? "active" : "")" @onclick='() => SetSort("price")'>
-                            Цена <i class="sort-icon @(_activeSort == "price" ? (_isAscending ? "asc" : "desc") : "")"></i>
-                        </button>
-                        <button class="btn btn-sort @(_activeSort == "duration" ? "active" : "")" @onclick='() => SetSort("duration")'>
-                            Время <i class="sort-icon @(_activeSort == "duration" ? (_isAscending ? "asc" : "desc") : "")"></i>
-                        </button>
-                        <button class="btn btn-sort @(_activeSort == "comfort" ? "active" : "")" @onclick='() => SetSort("comfort")'>
-                            Комфорт <i class="sort-icon @(_activeSort == "comfort" ? (_isAscending ? "asc" : "desc") : "")"></i>
-                        </button>
-                    </div>
-                    <span class="ms-auto count-badge">
-                        @if (_filteredFlights != null && _filteredFlights.Any())
-                        {
-                            <span>Найдено рейсов: @_filteredFlights.Count</span>
-                        }
-                    </span>
-                </div>
-
-                @if (_displayedFlights != null && _displayedFlights.Any())
-                {
-                    @foreach (var itinerary in _displayedFlights)
-                    {
-                        // Берем первый и последний сегменты для общей информации
-                        var firstFlight = itinerary.Flights.First();
-                        var lastFlight = itinerary.Flights.Last();
-
-                        <div class="ticket-card shadow-sm mb-4 bg-white animate-fade-in">
-                            <div class="row g-0 align-items-stretch">
-                                <div class="col-md-9 p-4 d-flex align-items-center">
-                                    <div class="w-100">
-                                        <div class="flight-route-info">
-                                            <div class="d-flex justify-content-between mb-2">
-                                                @* Статус берем у первого рейса или выводим общий *@
-                                                <span class="text-muted small fw-bold pe-3">@firstFlight.Status</span>
-                                                @* Если пересадка, можно вывести список номеров или только первый *@
-                                                <span class="text-muted small fw-bold pe-3">
-                                                    @(itinerary.Flights.Count > 1 ? "Стыковочный рейс" : firstFlight.Schema.FlightNumber)
-                                                </span>
-                                            </div>
-                                            <div class="d-flex align-items-center justify-content-between text-center">
-                                                @* ОТКУДА: Берем из первого рейса *@
-                                                <div class="text-start" style="min-width: 85px;">
-                                                    <div class="h3 fw-bold m-0 text-dark">@firstFlight.Schema.Origin.Code</div>
-                                                    <div class="small text-muted text-truncate" style="max-width: 90px;">@firstFlight.Schema.Origin.City.Name</div>
-                                                    <div class="small fw-bold text-secondary mt-1">@firstFlight.LocalDepartureTime.ToString("dd MMM")</div>
-                                                </div>
-
-                                                <div class="flex-grow-1 px-3">
-                                                    <div class="mb-1">
-                                                        @* Перевозчик первого рейса *@
-                                                        <span class="small fw-bold text-primary">@firstFlight.Schema.Carrier.Name</span>
-                                                        @if (itinerary.IsSelfTransfer)
-                                                        {
-                                                            <span class="badge bg-info text-dark ms-2" style="font-size: 0.6rem;">Разные АК</span>
-                                                        }
-                                                    </div>
-                                                    <div class="mb-2">
-                                                        <span class="h4 fw-bold text-primary">@firstFlight.LocalDepartureTime.ToString("HH:mm")</span>
-                                                        <span class="mx-2 text-muted">—</span>
-                                                        @* КУДА: Время прилета последнего рейса *@
-                                                        <span class="h4 fw-bold text-primary">@lastFlight.LocalArrivalTime.ToString("HH:mm")</span>
-                                                    </div>
-
-                                                    @* Визуализация пути *@
-                                                    <div class="path-line position-relative">
-                                                        <i class="bi bi-airplane-fill"></i>
-                                                        @if (itinerary.StopsCount > 0)
-                                                        {
-                                                            @* Точка пересадки на линии *@
-                                                            <div class="transfer-dot" title="Пересадка в @string.Join(", ", itinerary.GetTransferCities())"></div>
-                                                        }
-                                                    </div>
-
-                                                    <div class="mb-3">
-                                                        @* Общая длительность из Itinerary *@
-                                                        <span class="small fw-bold text-muted">@itinerary.TotalDuration.ToString(@"hh\:mm")</span>
-                                                        @if (itinerary.StopsCount > 0)
-                                                        {
-                                                            <div class="small text-warning fw-bold">@itinerary.StopsCount пересадка</div>
-                                                        }
-                                                    </div>
-                                                </div>
-
-                                                @* КУДА: Данные последнего рейса *@
-                                                <div class="text-end" style="min-width: 85px;">
-                                                    <div class="h3 fw-bold m-0 text-dark">@lastFlight.Schema.Destination.Code</div>
-                                                    <div class="small text-muted text-truncate" style="max-width: 90px;">@lastFlight.Schema.Destination.City.Name</div>
-                                                    <div class="small fw-bold text-secondary mt-1">@lastFlight.LocalArrivalTime.ToString("dd MMM")</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-3 p-4 border-start border-dashed bg-light d-flex flex-column justify-content-center text-center price-panel">
-                                    <div class="text-muted small mb-1">Общая цена</div>
-                                    @* Общая цена из Itinerary *@
-                                    <div class="h2 fw-bold mb-3 text-primary">@itinerary.TotalBasePrice.ToString("N0")</div>
-                                    <button class="btn btn-warning w-100 fw-bold text-white rounded-pill py-2 shadow-sm" @onclick="() => OpenDetails(itinerary)">Подробнее</button>
-                                </div>
-                            </div>
-                        </div>
-                    }
-
-                    @if (_displayedFlights.Count < _filteredFlights.Count)
-                    {
-                        <div class="text-center mt-5">
-                            <button class="btn btn-outline-primary px-5 py-3 fw-bold rounded-pill shadow-sm load-more-btn" @onclick="LoadMore">
-                                Показать еще
-                            </button>
-                            <p class="text-muted small mt-2">Показано @_displayedFlights.Count из @_filteredFlights.Count рейсов</p>
-                        </div>
-                    }
-                }
-                else
-                {
-                    <div class="no-results-card p-5 text-center bg-white rounded-4 border">
+    @if (_allFoundFlights == null || !_allFoundFlights.Any())
+    {
+        <div class="container mt-5 mb-5 animate-results">
+            <div class="row g-4">
+                <div class="no-results-card p-5 text-center bg-white rounded-4 border">
                         <div class="mb-3">
                             <i class="bi bi-airplane fs-1 text-muted"></i>
                         </div>
                         <h5 class="fw-bold text-secondary mb-2">Рейсы не найдены</h5>
-                        <p class="text-muted mb-0">Попробуйте изменить критерии поиска</p>
+                        <p class="text-muted mb-0">Попробуйте изменить критерии поиска!</p>
                     </div>
-                }
             </div>
-
-            <div class="col-lg-4 d-none d-lg-block">
-                <div class="filter-panel p-4 bg-white rounded-4 shadow-sm border sticky-top" style="top: 20px;" role="region" aria-label="Фильтры поиска">
-                    <div class="filter-header d-flex justify-content-between align-items-center mb-4">
-                        <h5 class="fw-bold m-0 text-dark">
-                            <i class="bi bi-sliders2-vertical me-2 text-primary"></i>Фильтры
-                        </h5>
-                        <button class="btn btn-link btn-sm text-decoration-none p-0 filter-reset-btn" @onclick="ResetFilters">Сбросить все</button>
+        </div>
+    } else
+    {
+        <div class="container mt-5 mb-5 animate-results">
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="sorting-panel mb-4 p-3 bg-white rounded-4 shadow-sm d-flex align-items-center gap-3 flex-wrap">
+                        <span class="text-muted small fw-bold text-uppercase">Сортировка:</span>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sort @(_activeSort == "price" ? "active" : "")" @onclick='() => SetSort("price")'>
+                                Цена <i class="sort-icon @(_activeSort == "price" ? (_isAscending ? "asc" : "desc") : "")"></i>
+                            </button>
+                            <button class="btn btn-sort @(_activeSort == "duration" ? "active" : "")" @onclick='() => SetSort("duration")'>
+                                Время <i class="sort-icon @(_activeSort == "duration" ? (_isAscending ? "asc" : "desc") : "")"></i>
+                            </button>
+                            <button class="btn btn-sort @(_activeSort == "comfort" ? "active" : "")" @onclick='() => SetSort("comfort")'>
+                                Комфорт <i class="sort-icon @(_activeSort == "comfort" ? (_isAscending ? "asc" : "desc") : "")"></i>
+                            </button>
+                        </div>
+                        <span class="ms-auto count-badge">
+                            @if (_filteredFlights != null && _filteredFlights.Any())
+                            {
+                                <span>Найдено рейсов: @_filteredFlights.Count</span>
+                            }
+                        </span>
                     </div>
 
-                    <div class="filter-section mb-4">
-                        <label class="filter-label">Авиакомпании</label>
-                        <div class="filter-scroll-area" style="max-height: 200px; overflow-y: auto;">
-                            @if (_allFoundFlights != null && _allFoundFlights.Any())
-                            {
-                                @foreach (var airline in _allFoundFlights
-                                                        .SelectMany(it => it.Flights)
-                                                        .Select(f => f.Schema.Carrier)
-                                                        .GroupBy(c => c.IATACode)
-                                                        .Select(g => g.First())
-                                                        .OrderBy(a => a.Name))
-                                {
-                                    <div class="custom-check-item">
-                                        <label class="check-container">
-                                            <span class="check-text">@airline.Name (@airline.IATACode)</span>
-                                            <input type="checkbox"
-                                                   checked="@_filters.SelectedAirlines.Any(a => a.IATACode == airline.IATACode)"
-                                                   @onchange="@(e => ToggleAirline(airline, e.Value))">
-                                            <span class="checkmark"></span>
-                                        </label>
+                    @if (_displayedFlights != null && _displayedFlights.Any())
+                    {
+                        @foreach (var itinerary in _displayedFlights)
+                        {
+                            // Берем первый и последний сегменты для общей информации
+                            var firstFlight = itinerary.Flights.First();
+                            var lastFlight = itinerary.Flights.Last();
+
+                            <div class="ticket-card shadow-sm mb-4 bg-white animate-fade-in">
+                                <div class="row g-0 align-items-stretch">
+                                    <div class="col-md-9 p-4 d-flex align-items-center">
+                                        <div class="w-100">
+                                            <div class="flight-route-info">
+                                                <div class="d-flex justify-content-between mb-2">
+                                                    @* Статус берем у первого рейса или выводим общий *@
+                                                    <span class="text-muted small fw-bold pe-3">@firstFlight.Status</span>
+                                                    @* Если пересадка, можно вывести список номеров или только первый *@
+                                                    <span class="text-muted small fw-bold pe-3">
+                                                        @(itinerary.Flights.Count > 1 ? "Стыковочный рейс" : firstFlight.Schema.FlightNumber)
+                                                    </span>
+                                                </div>
+                                                <div class="d-flex align-items-center justify-content-between text-center">
+                                                    @* ОТКУДА: Берем из первого рейса *@
+                                                    <div class="text-start" style="min-width: 85px;">
+                                                        <div class="h3 fw-bold m-0 text-dark">@firstFlight.Schema.Origin.Code</div>
+                                                        <div class="small text-muted text-truncate" style="max-width: 90px;">@firstFlight.Schema.Origin.City.Name</div>
+                                                        <div class="small fw-bold text-secondary mt-1">@firstFlight.LocalDepartureTime.ToString("dd MMM")</div>
+                                                    </div>
+
+                                                    <div class="flex-grow-1 px-3">
+                                                        <div class="mb-1">
+                                                            @* Перевозчик первого рейса *@
+                                                            @if (itinerary.IsSelfTransfer)
+                                                            {
+                                                                <span class="small fw-bold text-primary">Разные авиакомпании</span>
+                                                            }
+                                                            @* <span class="small fw-bold text-primary">@firstFlight.Schema.Carrier.Name</span> *@
+                                                            
+                                                        </div>
+                                                        <div class="mb-2">
+                                                            <span class="h4 fw-bold text-primary">@firstFlight.LocalDepartureTime.ToString("HH:mm")</span>
+                                                            <span class="mx-2 text-muted">—</span>
+                                                            @* КУДА: Время прилета последнего рейса *@
+                                                            <span class="h4 fw-bold text-primary">@lastFlight.LocalArrivalTime.ToString("HH:mm")</span>
+                                                        </div>
+
+                                                        @* Визуализация пути *@
+                                                        <div class="path-line position-relative">
+                                                            <i class="bi bi-airplane-fill"></i>
+                                                            @if (itinerary.StopsCount > 0)
+                                                            {
+                                                                @* Точка пересадки на линии *@
+                                                                <div class="transfer-dot" title="Пересадка в @string.Join(", ", itinerary.GetTransferCities())"></div>
+                                                            }
+                                                        </div>
+
+                                                        <div class="mb-3">
+                                                            @* Общая длительность из Itinerary *@
+                                                            <span class="small fw-bold text-muted">@itinerary.TotalDuration.ToString(@"hh\:mm")</span>
+                                                            @if (itinerary.StopsCount > 0)
+                                                            {
+                                                                <div class="small text-warning fw-bold">@itinerary.StopsCount пересадка</div>
+                                                            }
+                                                        </div>
+                                                    </div>
+
+                                                    @* КУДА: Данные последнего рейса *@
+                                                    <div class="text-end" style="min-width: 85px;">
+                                                        <div class="h3 fw-bold m-0 text-dark">@lastFlight.Schema.Destination.Code</div>
+                                                        <div class="small text-muted text-truncate" style="max-width: 90px;">@lastFlight.Schema.Destination.City.Name</div>
+                                                        <div class="small fw-bold text-secondary mt-1">@lastFlight.LocalArrivalTime.ToString("dd MMM")</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
+
+                                    <div class="col-md-3 p-4 border-start border-dashed bg-light d-flex flex-column justify-content-center text-center price-panel">
+                                        <div class="text-muted small mb-1">Общая цена</div>
+                                        @* Общая цена из Itinerary *@
+                                        <div class="h2 fw-bold mb-3 text-primary">@itinerary.TotalBasePrice.ToString("N0")</div>
+                                        <button class="btn btn-warning w-100 fw-bold text-white rounded-pill py-2 shadow-sm" @onclick="() => OpenDetails(itinerary)">Подробнее</button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        @if (_displayedFlights.Count < _filteredFlights.Count)
+                        {
+                            <div class="text-center mt-5">
+                                <button class="btn btn-outline-primary px-5 py-3 fw-bold rounded-pill shadow-sm load-more-btn" @onclick="LoadMore">
+                                    Показать еще
+                                </button>
+                                <p class="text-muted small mt-2">Показано @_displayedFlights.Count из @_filteredFlights.Count рейсов</p>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="no-results-card p-5 text-center bg-white rounded-4 border">
+                            <div class="mb-3">
+                                <i class="bi bi-airplane fs-1 text-muted"></i>
+                            </div>
+                            <h5 class="fw-bold text-secondary mb-2">Рейсы не найдены</h5>
+                            <p class="text-muted mb-0">Попробуйте изменить критерии фильтра</p>
+                        </div>
+                    }
+                </div>
+
+                <div class="col-lg-4 d-none d-lg-block">
+                    <div class="filter-panel p-4 bg-white rounded-4 shadow-sm border sticky-top" style="top: 20px;" role="region" aria-label="Фильтры поиска">
+                        <div class="filter-header d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="fw-bold m-0 text-dark">
+                                <i class="bi bi-sliders2-vertical me-2 text-primary"></i>Фильтры
+                            </h5>
+                            <button class="btn btn-link btn-sm text-decoration-none p-0 filter-reset-btn" @onclick="ResetFilters">Сбросить все</button>
+                        </div>
+
+                        <div class="filter-section mb-4">
+                            <label class="filter-label">Авиакомпании</label>
+                            <div class="filter-scroll-area" style="max-height: 200px; overflow-y: auto;">
+                                @if (_allFoundFlights != null && _allFoundFlights.Any())
+                                {
+                                    @foreach (var airline in _allFoundFlights
+                                                            .SelectMany(it => it.Flights)
+                                                            .Select(f => f.Schema.Carrier)
+                                                            .GroupBy(c => c.IATACode)
+                                                            .Select(g => g.First())
+                                                            .OrderBy(a => a.Name))
+                                    {
+                                        <div class="custom-check-item">
+                                            <label class="check-container">
+                                                <span class="check-text">@airline.Name (@airline.IATACode)</span>
+                                                <input type="checkbox"
+                                                       checked="@_filters.SelectedAirlines.Any(a => a.IATACode == airline.IATACode)"
+                                                       @onchange="@(e => ToggleAirline(airline, e.Value))">
+                                                <span class="checkmark"></span>
+                                            </label>
+                                        </div>
+                                    }
                                 }
-                            }
-                            else
-                            {
-                                <span class="text-muted small">Сначала выполните поиск</span>
-                            }
-                        </div>
-                    </div>
-
-                    <div class="filter-section mb-4">
-                        <label class="filter-label">Класс обслуживания</label>
-                        <div class="time-grid">
-                            @foreach (var sc in Enum.GetValues<ServiceClass>())
-                            {
-                                <button class="time-chip @(_filters.SelectedClasses.Contains(sc) ? "active" : "")"
-                                        @onclick="@(() => ToggleServiceClass(sc))">
-                                    @if (sc == ServiceClass.Economy)
-                                    {
-                                        <i class="bi bi-person"></i>
-                                    }
-                                    else if (sc == ServiceClass.Business)
-                                    {
-
-                                        <i class="bi bi-briefcase"></i>
-                                    }
-                                    else if (sc == ServiceClass.First)
-                                    {
-
-                                        <i class="bi bi-star"></i>
-                                    }
-                                    else
-                                    {
-
-                                        <i class="bi bi-gem"></i>
-                                    }
-
-                                    <span>@sc.ToString()</span>
-                                </button>
-                            }
-                        </div>
-                    </div>
-
-                    <div class="filter-section mb-4">
-                        <label class="filter-label">Дни вылета</label>
-                        <div class="days-grid">
-                            @foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
-                            {
-                                var d = day;
-                                <label class="day-item">
-                                    <input type="checkbox" checked="@_filters.SelectedDays.Contains(d)"
-                                           @onchange="@(e => ToggleDay(d, e.Value))">
-                                    <span>@GetDayShortName(d)</span>
-                                </label>
-                            }
-                        </div>
-                    </div>
-
-                    <div class="filter-section mb-4">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <label class="filter-label m-0">Цена</label>
-                            <span class="price-value-badge">до @_filters.MaxPrice.ToString("N0") ₽</span>
+                                else
+                                {
+                                    <span class="text-muted small">Сначала выполните поиск</span>
+                                }
+                            </div>
                         </div>
 
-                        @* Используем @_minFoundPrice и @_maxFoundPrice в атрибутах *@
-                        <input type="range" class="styled-range"
-                               min="@((double)_minFoundPrice)"
-                               max="@((double)_maxFoundPrice)"
-                               step="100"
-                               @bind="_filters.MaxPrice"
-                               @bind:event="oninput"
-                               @onchange="OnFilterChanged">
+                        <div class="filter-section mb-4">
+                            <label class="filter-label">Класс обслуживания</label>
+                            <div class="time-grid">
+                                @foreach (var sc in Enum.GetValues<ServiceClass>())
+                                {
+                                    <button class="time-chip @(_filters.SelectedClasses.Contains(sc) ? "active" : "")"
+                                            @onclick="@(() => ToggleServiceClass(sc))">
+                                        @if (sc == ServiceClass.Economy)
+                                        {
+                                            <i class="bi bi-person"></i>
+                                        }
+                                        else if (sc == ServiceClass.Business)
+                                        {
 
-                        <div class="d-flex justify-content-between mt-2">
-                            @* Текстовые подписи тоже делаем динамическими *@
-                            <span class="range-limit">@_minFoundPrice.ToString("N0")</span>
-                            <span class="range-limit">@_maxFoundPrice.ToString("N0")</span>
+                                            <i class="bi bi-briefcase"></i>
+                                        }
+                                        else if (sc == ServiceClass.First)
+                                        {
+
+                                            <i class="bi bi-star"></i>
+                                        }
+                                        else
+                                        {
+
+                                            <i class="bi bi-gem"></i>
+                                        }
+
+                                        <span>@sc.ToString()</span>
+                                    </button>
+                                }
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="filter-section">
-                        <label class="filter-label">Время вылета</label>
-                        <div class="time-grid">
-                            @foreach (var slot in new[] { ("Morning", "Утро", "bi-brightness-alt-high"), ("Day", "День", "bi-sun"), ("Evening", "Вечер", "bi-moon-stars"), ("Night", "Ночь", "bi-cloud-moon") })
-                            {
-                                <button class="time-chip @(_filters.SelectedTimeSlots.Contains(slot.Item1) ? "active" : "")"
-                                        @onclick="@(() => ToggleTimeSlot(slot.Item1))">
-                                    <i class="bi @slot.Item3"></i>
-                                    <span>@slot.Item2</span>
-                                </button>
-                            }
+                        <div class="filter-section mb-4">
+                            <label class="filter-label">Дни вылета</label>
+                            <div class="days-grid">
+                                @foreach (DayOfWeek day in Enum.GetValues<DayOfWeek>())
+                                {
+                                    var d = day;
+                                    <label class="day-item">
+                                        <input type="checkbox" checked="@_filters.SelectedDays.Contains(d)"
+                                               @onchange="@(e => ToggleDay(d, e.Value))">
+                                        <span>@GetDayShortName(d)</span>
+                                    </label>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="filter-section mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <label class="filter-label m-0">Цена</label>
+                                <span class="price-value-badge">до @_filters.MaxPrice.ToString("N0") ₽</span>
+                            </div>
+
+                            @* Используем @_minFoundPrice и @_maxFoundPrice в атрибутах *@
+                            <input type="range" class="styled-range"
+                                   min="@((double)_minFoundPrice)"
+                                   max="@((double)_maxFoundPrice)"
+                                   step="100"
+                                   @bind="_filters.MaxPrice"
+                                   @bind:event="oninput"
+                                   @onchange="OnFilterChanged">
+
+                            <div class="d-flex justify-content-between mt-2">
+                                @* Текстовые подписи тоже делаем динамическими *@
+                                <span class="range-limit">@_minFoundPrice.ToString("N0")</span>
+                                <span class="range-limit">@_maxFoundPrice.ToString("N0")</span>
+                            </div>
+                        </div>
+
+                        <div class="filter-section">
+                            <label class="filter-label">Время вылета</label>
+                            <div class="time-grid">
+                                @foreach (var slot in new[] { ("Morning", "Утро", "bi-brightness-alt-high"), ("Day", "День", "bi-sun"), ("Evening", "Вечер", "bi-moon-stars"), ("Night", "Ночь", "bi-cloud-moon") })
+                                {
+                                    <button class="time-chip @(_filters.SelectedTimeSlots.Contains(slot.Item1) ? "active" : "")"
+                                            @onclick="@(() => ToggleTimeSlot(slot.Item1))">
+                                        <i class="bi @slot.Item3"></i>
+                                        <span>@slot.Item2</span>
+                                    </button>
+                                }
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    }
 }
+
 
 @code {
     // --- Поиск и Данные ---
@@ -562,7 +583,9 @@
     // --- Логика Поиска ---
     private async Task HandleSearch()
     {
-        if (_departureCity == null && _arrivalCity == null && !_departureDate.HasValue) return;
+
+
+        // if (_departureCity == null && _arrivalCity == null && !_departureDate.HasValue) return;
 
         _isSearching = true;
         _isSearchPerformed = false;
