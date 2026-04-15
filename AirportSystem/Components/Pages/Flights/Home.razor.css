@@ -96,11 +96,26 @@
         gap: 20px;
     }
 
-.main-search-row {
-    display: flex;
-    width: 100%;
-    align-items: stretch;
+.avia-available {
+    max-width: 1140px;
+    margin: 0 auto;
 }
+
+.avia-available a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+    .avia-available a:hover {
+        text-decoration: underline;
+    }
+
+    .main-search-row {
+        display: flex;
+        width: 100%;
+        align-items: stretch;
+    }
 
 .btn-search-main {
     background: #ff9241;
@@ -154,7 +169,7 @@
     top: -12px;
     background: #fff;
     color: #94a3b8;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #ef4444;
     width: 26px;
     height: 26px;
     border-radius: 50%;
@@ -167,8 +182,8 @@
 }
 
     .btn-remove-segment:hover {
-        color: #ef4444;
-        border-color: #ef4444;
+        color: #fff;
+        background: #ef4444;
         transform: scale(1.1);
     }
 

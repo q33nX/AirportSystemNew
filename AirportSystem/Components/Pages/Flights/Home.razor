@@ -56,8 +56,9 @@
                                             <div class="text-start">
                                                 <div class="h2 fw-bold mb-0">@flight.LocalDepartureTime.ToString("HH:mm")</div>
                                                 <div class="fw-bold fs-5">@flight.Schema.Origin.Code</div>
+                                                <div class="small text-muted text-truncate">@flight.Schema.Origin.City.Name</div>
                                                 <div class="text-muted small">@flight.LocalDepartureTime.ToString("dd MMM, dddd")</div>
-                                                <div class="small mt-2">Терминал </div>
+                                                @* <div class="small mt-2">Терминал </div> *@
                                             </div>
 
                                             <div class="flex-grow-1 px-4 text-center mt-3">
@@ -71,8 +72,9 @@
                                             <div class="text-end">
                                                 <div class="h2 fw-bold mb-0">@flight.LocalArrivalTime.ToString("HH:mm")</div>
                                                 <div class="fw-bold fs-5">@flight.Schema.Destination.Code</div>
+                                                <div class="small text-muted text-truncate">@flight.Schema.Destination.City.Name</div>
                                                 <div class="text-muted small">@flight.LocalArrivalTime.ToString("dd MMM, dddd")</div>
-                                                <div class="small mt-2">Терминал </div>
+                                                @* <div class="small mt-2">Терминал </div> *@
                                             </div>
                                         </div>
                                     </div>
@@ -214,7 +216,6 @@
                 Сложный маршрут
             </button>
         </div>
-
         <div class="avia-panel shadow-lg">
             @if (_currentMode == SearchMode.Roundtrip)
             {
@@ -250,11 +251,19 @@
                             <button type="button" class="btn-add-segment" @onclick="AddSegment" disabled="@(Segments.Count >= 5)">
                                 <i class="bi bi-plus-lg"></i> Добавить перелет
                             </button>
+                        } else
+                        {
+                            <button type="button" class="btn-add-segment text-danger" disabled="@(Segments.Count >= 5)">
+                                <i class="bi bi-plus-lg"></i> Достигнут лимит 5 перелётов!
+                            </button>
                         }
                         <button type="button" class="btn-search-large" @onclick="HandleSearch">Найти</button>
                     </div>
                 </div>
             }
+        </div>
+        <div class="avia-available mt-3 text-white">
+            <a href="#">Просмотреть доступные направления</a>
         </div>
     </div>
 </div>
@@ -336,8 +345,10 @@
                                                             @if (itinerary.IsSelfTransfer)
                                                             {
                                                                 <span class="small fw-bold text-primary">Разные авиакомпании</span>
+                                                            } else
+                                                            {
+                                                                <span class="small fw-bold text-primary">@firstFlight.Schema.Carrier.Name</span>
                                                             }
-                                                            @* <span class="small fw-bold text-primary">@firstFlight.Schema.Carrier.Name</span> *@
                                                             
                                                         </div>
                                                         <div class="mb-2">
@@ -414,9 +425,36 @@
                     <div class="filter-panel p-4 bg-white rounded-4 shadow-sm border sticky-top" style="top: 20px;" role="region" aria-label="Фильтры поиска">
                         <div class="filter-header d-flex justify-content-between align-items-center mb-4">
                             <h5 class="fw-bold m-0 text-dark">
-                                <i class="bi bi-sliders2-vertical me-2 text-primary"></i>Фильтры
+                                <i class="bi bi-sliders2-vertical text-primary"></i>Фильтры
                             </h5>
                             <button class="btn btn-link btn-sm text-decoration-none p-0 filter-reset-btn" @onclick="ResetFilters">Сбросить все</button>
+                        </div>
+
+                        <div class="filter-section mb-4">
+                            <label class="filter-label">Пересадки</label>
+                            <div class="filter-scroll-area" style="max-height: 200px; overflow-y: auto;">
+                                @if (_allFoundFlights != null && _allFoundFlights.Any())
+                                {
+
+                                    @foreach (var stops in _allFoundFlights
+                                                            .Select(f => f.StopsCount)
+                                                            .Distinct())
+                                    {
+                                        <div class="custom-check-item">
+                                            <label class="check-container">
+                                                <span class="check-text">@stops</span>
+                                                <input type="checkbox"
+                                                       checked="">
+                                                <span class="checkmark"></span>
+                                            </label>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">Сначала выполните поиск</span>
+                                }
+                            </div>
                         </div>
 
                         <div class="filter-section mb-4">
