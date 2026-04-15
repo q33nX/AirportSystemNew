@@ -838,6 +838,8 @@
         return baseTotal;
     }
 
+
+
     private IEnumerable<ServiceClass> GetAvailableClassesForItinerary(Itinerary itinerary)
     {
         // Если маршрут пустой, возвращаем эконом по умолчанию
@@ -859,6 +861,7 @@
     private string TranslateClass(ServiceClass sClass) => sClass switch
     {
         ServiceClass.Economy => "Эконом",
+        ServiceClass.Comfort => "Комфорт",
         ServiceClass.Business => "Бизнес",
         ServiceClass.First => "Первый",
         _ => sClass.ToString()
