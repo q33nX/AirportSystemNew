@@ -236,9 +236,9 @@
                     @foreach (var segment in Segments)
                     {
                         <div class="segment-row fade-in-row" @key="segment">
-                            <CitySelect Placeholder="Откуда" Cities="_cities" />
-                            <CitySelect Placeholder="Куда" Cities="_cities"  />
-                            <DateSelect Placeholder="Когда" />
+                            <CitySelect Placeholder="Откуда" Cities="_cities" OnCitySelected="c => segment.DepartureCity = c" />
+                            <CitySelect Placeholder="Куда" Cities="_cities" OnCitySelected="c => segment.ArrivalCity = c"  />
+                            <DateSelect Placeholder="Когда" OnDateSelected="d => segment.DepartureDate = d" />
 
                             @if (Segments.Count > 2)
                             {

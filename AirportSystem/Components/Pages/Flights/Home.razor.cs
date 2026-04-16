@@ -1,4 +1,5 @@
 ﻿using AirportSystem.Core.Entities;
+using AirportSystem.Core.ViewModels;
 
 namespace AirportSystem.Components.Pages // Проверьте ваш namespace
 {
@@ -9,10 +10,10 @@ namespace AirportSystem.Components.Pages // Проверьте ваш namespace
 
         private SearchMode _currentMode = SearchMode.Roundtrip;
 
-        private List<FlightSchema> Segments = new()
+        private List<FlightSearchModel> Segments = new()
         {
-            new FlightSchema(),
-            new FlightSchema()
+            new FlightSearchModel(),
+            new FlightSearchModel()
         };
 
         private void SetSearchMode(SearchMode mode)
@@ -24,11 +25,11 @@ namespace AirportSystem.Components.Pages // Проверьте ваш namespace
         {
             if (Segments.Count < 5)
             {
-                Segments.Add(new FlightSchema());
+                Segments.Add(new FlightSearchModel());
             }
         }
 
-        private void RemoveSegment(FlightSchema segment)
+        private void RemoveSegment(FlightSearchModel segment)
         {
             Segments.Remove(segment);
         }
