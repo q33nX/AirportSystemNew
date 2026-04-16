@@ -10,11 +10,11 @@ public class Itinerary
     // Общая стоимость всех сегментов
     public decimal TotalBasePrice => Flights.Sum(f => f.BasePrice);
 
-    // Время вылета (самый первый рейс)
-    public DateTime DepartureTime => Flights.Any() ? Flights.First().LocalDepartureTime : DateTime.MinValue;
+    // Время вылета (самый первый рейс) - по UTC
+    public DateTime DepartureTime => Flights.Any() ? Flights.First().ActualDepartureTime : DateTime.MinValue;
 
-    // Время прилета (самый последний рейс)
-    public DateTime ArrivalTime => Flights.Any() ? Flights.Last().LocalArrivalTime : DateTime.MinValue;
+    // Время прилета (самый последний рейс) - по UTC
+    public DateTime ArrivalTime => Flights.Any() ? Flights.Last().ActualArrivalTime : DateTime.MinValue;
 
     // Общее время в пути (от взлета первого до посадки последнего)
     public TimeSpan TotalDuration => ArrivalTime - DepartureTime;

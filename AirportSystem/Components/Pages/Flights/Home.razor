@@ -271,6 +271,15 @@
     </div>
 </div>
 
+@if (!string.IsNullOrEmpty(_validationMessage))
+{
+    <div class="container mt-4">
+        <div class="alert alert-warning" role="alert">
+            @_validationMessage
+        </div>
+    </div>
+}
+
 <!-- Блок сортировки, фильтрации и вывода маршрутов -->
 @if (_isSearchPerformed)
 {
@@ -445,11 +454,16 @@
 
                                     @foreach (var stops in _allFoundFlights
                                                             .Select(f => f.StopsCount)
-                                                            .Distinct())
+                                                            .Distinct()
+                                                            .OrderBy(s => s))
                                     {
                                         <div class="custom-check-item">
                                             <label class="check-container">
-                                                <span class="check-text">@stops</span>
+                                                <span class="check-text">
+                                                    @(stops == 0 ? "Прямой рейс" : 
+                                                      stops == 1 ? "1 пересадка" : 
+                                                      $"{stops} пересадки")
+                                                </span>
                                                 <input type="checkbox"
                                                        checked="@_filters.AllowedStops.Contains(stops)"
                                                        @onchange="e => ToggleStops(stops, (bool)e.Value)">
@@ -602,6 +616,7 @@
     private FlightFilterModel _filters = new();
     private bool _isSearching = false;
     private bool _isSearchPerformed = false;
+    private string? _validationMessage;
     private int pageSize = 10;
     private string _activeSort = "price";
     private bool _isAscending = true;
@@ -629,6 +644,46 @@
     // --- Логика Поиска ---
     private async Task HandleSearch()
     {
+        // Всегда очищаем результаты перед новым поиском
+        _allFoundFlights = new List<Itinerary>();
+        _filteredFlights = new List<Itinerary>();
+        _displayedFlights = new List<Itinerary>();
+
+        // Проверка обязательных полей
+        if (_currentMode == SearchMode.MultiCity)
+        {
+            var validSegments = Segments.Where(s => 
+                s.DepartureCity != null && !string.IsNullOrEmpty(s.DepartureCity.IATACode) &&
+                s.ArrivalCity != null && !string.IsNullOrEmpty(s.ArrivalCity.IATACode)).ToList();
+            if (validSegments.Count < 2)
+            {
+                _isSearchPerformed = true;
+                return;
+            }
+        }
+        else
+        {
+            var fromEmpty = _departureCity == null || string.IsNullOrEmpty(_departureCity.IATACode);
+            var toEmpty = _arrivalCity == null || string.IsNullOrEmpty(_arrivalCity.IATACode);
+            var departureDateEmpty = !_departureDate.HasValue;
+            var returnDateEmpty = !_returnDate.HasValue;
+
+            if (fromEmpty && toEmpty && departureDateEmpty && returnDateEmpty)
+            {
+                _isSearchPerformed = true;
+                return;
+            }
+
+            // Проверка: дата возврата только если есть Откуда, Куда и Дата вылета
+            if (returnDateEmpty == false && (fromEmpty || toEmpty || departureDateEmpty))
+            {
+                _validationMessage = "Для поиска обратного рейса необходимо заполнить поля: Откуда, Куда и Дата вылета";
+                _isSearchPerformed = true;
+                return;
+            }
+        }
+
+        _validationMessage = null;
         _isSearching = true;
         _isSearchPerformed = false;
 
