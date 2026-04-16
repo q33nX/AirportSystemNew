@@ -1,5 +1,6 @@
 ﻿using AirportSystem.Core.Entities;
 using AirportSystem.Core.ViewModels;
+using Microsoft.AspNetCore.Components;
 
 namespace AirportSystem.Components.Pages // Проверьте ваш namespace
 {
@@ -26,12 +27,37 @@ namespace AirportSystem.Components.Pages // Проверьте ваш namespace
             if (Segments.Count < 5)
             {
                 Segments.Add(new FlightSearchModel());
+                UpdateSegmentMinDates();
             }
         }
 
         private void RemoveSegment(FlightSearchModel segment)
         {
             Segments.Remove(segment);
+            UpdateSegmentMinDates();
+        }
+
+        private void OnSegmentDateChanged(FlightSearchModel segment, DateTime? date)
+        {
+            segment.DepartureDate = date;
+            UpdateSegmentMinDates();
+            StateHasChanged();
+        }
+
+        private void UpdateSegmentMinDates()
+        {
+            for (int i = 0; i < Segments.Count; i++)
+            {
+                if (i == 0)
+                {
+                    Segments[i].MinDate = DateTime.Now.Date;
+                }
+                else
+                {
+                    var prevDate = Segments[i - 1].DepartureDate?.Date;
+                    Segments[i].MinDate = prevDate ?? DateTime.Now.Date;
+                }
+            }
         }
     }
 }

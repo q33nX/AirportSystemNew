@@ -116,7 +116,7 @@ public class FlightSearchService : IFlightSearchService
                 .SelectMany(firstItinerary =>
                     currentSegmentResults
                         .Where(currentItinerary => 
-                            currentItinerary.DepartureTime.Date >= minDate &&
+                            currentItinerary.DepartureTime.Date == minDate &&
                             currentItinerary.DepartureTime > firstItinerary.ArrivalTime.AddHours(1))
                         .Select(currentItinerary => new Itinerary
                         {

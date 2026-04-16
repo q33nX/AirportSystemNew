@@ -7,6 +7,7 @@
 @using AirportSystem.Core.Interfaces
 @using AirportSystem.Core.ViewModels
 @using AirportSystem.Core.Enums
+@using Microsoft.AspNetCore.Components
 
 <PageTitle>Поиск авиабилетов</PageTitle>
 
@@ -237,8 +238,8 @@
                         <div class="segment-row fade-in-row" @key="segment">
                             <CitySelect Placeholder="Откуда" Cities="_cities" OnCitySelected="c => segment.DepartureCity = c" />
                             <CitySelect Placeholder="Куда" Cities="_cities" OnCitySelected="c => segment.ArrivalCity = c"  />
-                            <DateSelect Placeholder="Когда" OnDateSelected="d => segment.DepartureDate = d" />
-
+                            <DateSelect Placeholder="Когда" MinDate="segment.MinDate ?? DateTime.Now.Date" OnDateSelected="d => OnSegmentDateChanged(segment, d)" />
+                            
                             @if (Segments.Count > 2)
                             {
                                 <button type="button" class="btn-remove-segment" @onclick="() => RemoveSegment(segment)">
