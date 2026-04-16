@@ -1,12 +1,17 @@
-﻿using AirportSystem.Core.Entities;
+using AirportSystem.Core.Entities;
 using AirportSystem.Core.ViewModels;
-using Microsoft.AspNetCore.Components;
 using AirportSystem.Core.Enums;
+using AirportSystem.Core.Services;
+using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 
-namespace AirportSystem.Components.Pages // Проверьте ваш namespace
+namespace AirportSystem.Components.Pages
 {
     public partial class Home
     {
+        [Inject]
+        private IJSRuntime? JSRuntime { get; set; }
+
         private string GetClassDescription(ServiceClass sClass) => sClass switch
         {
             ServiceClass.Economy => "Стандарт",
@@ -16,7 +21,6 @@ namespace AirportSystem.Components.Pages // Проверьте ваш namespace
             _ => ""
         };
 
-        // Перечисляемое для режимов поиска (избавляемся от строк)
         private enum SearchMode { Roundtrip, MultiCity }
 
         private SearchMode _currentMode = SearchMode.Roundtrip;
@@ -51,7 +55,6 @@ namespace AirportSystem.Components.Pages // Проверьте ваш namespace
         {
             segment.DepartureDate = date;
             UpdateSegmentMinDates();
-            StateHasChanged();
         }
 
         private void UpdateSegmentMinDates()
@@ -68,6 +71,47 @@ namespace AirportSystem.Components.Pages // Проверьте ваш namespace
                     Segments[i].MinDate = prevDate ?? DateTime.Now.Date;
                 }
             }
+        }
+
+        private async Task SaveRouteToPdf()
+        {
+            if (_selectedItinerary == null || JSRuntime == null) return;
+
+            var firstFlight = _selectedItinerary.Flights.First();
+            var lastFlight = _selectedItinerary.Flights.Last();
+
+            var ticketData = new TicketData
+            {
+                PNR = GeneratePnr(),
+                OriginCity = firstFlight.Schema.Origin.City.Name,
+                OriginCode = firstFlight.Schema.Origin.Code,
+                DestinationCity = lastFlight.Schema.Destination.City.Name,
+                DestinationCode = lastFlight.Schema.Destination.Code,
+                DepartureDate = firstFlight.LocalDepartureTime,
+                ArrivalDate = lastFlight.LocalArrivalTime,
+                FlightNumber = firstFlight.Schema.FlightNumber,
+                CarrierName = firstFlight.Schema.Carrier.Name,
+                AircraftModel = firstFlight.Aircraft.Model,
+                ServiceClass = _selectedServiceClass,
+                AdultsCount = _adultsCount,
+                ChildrenCount = _childrenCount,
+                BasePrice = _selectedItinerary.TotalBasePrice,
+                TotalPrice = CalculateTotalPrice(),
+                HasExtraBaggage = _hasExtraBaggage,
+                HasInsurance = _hasInsurance
+            };
+
+            var pdfBytes = PdfTicketGenerator.GenerateTicket(ticketData);
+            var base64 = Convert.ToBase64String(pdfBytes);
+            await JSRuntime.InvokeVoidAsync("downloadFile", $"ticket_{ticketData.PNR}.pdf", base64);
+        }
+
+        private static readonly string _pnrChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        private string GeneratePnr()
+        {
+            var random = new Random();
+            return new string(Enumerable.Repeat(_pnrChars, 6)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
         }
     }
 }

@@ -1,6 +1,5 @@
 ﻿@page "/"
 @rendermode InteractiveServer
-@inject IJSRuntime JSRuntime
 @inject IFlightSearchService FlightSearchService
 @using AirportSystem.Core.Entities
 @using AirportSystem.Core.Services
@@ -191,7 +190,7 @@
                                         </div>
                                         <div class="text-end text-white-50 small">@(_adultsCount + _childrenCount) пасс.</div>
                                     </div>
-                                    <button class="btn btn-warning w-100 py-3 rounded-pill fw-bold fs-5 text-uppercase">Сохранить маршрут</button>
+                                    <button class="btn btn-warning w-100 py-3 rounded-pill fw-bold fs-5 text-uppercase" @onclick="SaveRouteToPdf">Сохранить маршрут</button>
                                 </div>
                             </div>
                         </div>
