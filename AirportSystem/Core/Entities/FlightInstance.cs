@@ -7,7 +7,7 @@ public class FlightInstance
     public Guid Id { get; init; } = Guid.NewGuid();
     public FlightSchema Schema { get; init; } = null!;
 
-    // Это дата изначального планирования (например, 15.05.2026)
+    // Это дата изначального планирования (например, 15.05.2026) — хранит только дату
     public DateTime DepartureDate { get; init; }
 
     // НОВОЕ ПОЛЕ: Если рейс задержан или перенесен, записываем новое время сюда.
@@ -22,7 +22,8 @@ public class FlightInstance
     public DateTime ActualArrivalTime =>
         OverriddenArrivalTime ?? ActualDepartureTime.Add(Schema.ArrivalOffset);
 
-    public TimeSpan ActualDuration => Schema.ArrivalOffset;
+    // Исправлено: длительность вычисляется с учётом фактических (возможно переопределённых) времён
+    public TimeSpan ActualDuration => ActualArrivalTime - ActualDepartureTime;
 
     // Время вылета по часам аэропорта отправления
     public DateTime LocalDepartureTime =>
@@ -40,5 +41,25 @@ public class FlightInstance
     public FlightStatus Status { get; set; } = FlightStatus.Scheduled;
     public HashSet<string> OccupiedSeatIds { get; init; } = new();
 
+    private readonly object _seatLock = new();
+
     public bool IsSeatAvailable(string seatId) => !OccupiedSeatIds.Contains(seatId);
+
+    public bool TryReserveSeat(string seatId)
+    {
+        lock (_seatLock)
+        {
+            if (OccupiedSeatIds.Contains(seatId)) return false;
+            OccupiedSeatIds.Add(seatId);
+            return true;
+        }
+    }
+
+    public bool ReleaseSeat(string seatId)
+    {
+        lock (_seatLock)
+        {
+            return OccupiedSeatIds.Remove(seatId);
+        }
+    }
 }

@@ -8,7 +8,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddScoped<IFlightRepository, MockDataService>();
+// MockDataService хранит in-memory данные — делаем его синглтоном, чтобы данные были общими для всего приложения.
+builder.Services.AddSingleton<IFlightRepository, MockDataService>();
+
 builder.Services.AddScoped<IPriceCalculator, PriceCalculatorService>();
 builder.Services.AddScoped<FlightSearchService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
@@ -20,7 +22,6 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 

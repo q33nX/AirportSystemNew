@@ -16,26 +16,25 @@ public class FlightSearchService
         _priceCalculator = priceCalculator;
     }
 
-
     public async Task<List<Itinerary>> SearchItinerariesAsync(City from, City to, DateTime? date)
     {
-        // 1. Жёсткое условие: если вообще всё пусто — выходим сразу
         if (from == null && to == null && !date.HasValue)
-            return new List<Itinerary>();
+            return new List<Itinerary>();                                                       
 
         var allFlights = await _repository.GetAllFlightsAsync();
         if (allFlights == null) return new List<Itinerary>();
 
         var itineraries = new List<Itinerary>();
 
-        // 2. Ищем прямые рейсы (адаптированный старый алгоритм)
+        // Локальное множество ключей для дедупликации комбинаций
+        var keys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        // 2. Ищем прямые рейсы
         var directFlights = allFlights.Where(f =>
         {
-            // Проверка на null внутри схемы
-            if (f.Schema?.Origin?.City == null || f.Schema?.Destination?.City == null)
-                return false;
+            if (f?.Schema == null) return false;
+            if (f.Schema.Origin?.City == null || f.Schema.Destination?.City == null) return false;
 
-            // Гибкое соответствие (если null — значит поле не учитываем)
             bool matchesOrigin = from == null ||
                 f.Schema.Origin.City.IATACode.Equals(from.IATACode, StringComparison.OrdinalIgnoreCase);
 
@@ -48,29 +47,35 @@ public class FlightSearchService
             return matchesOrigin && matchesDestination && matchesDate;
         }).ToList();
 
-        // Добавляем прямые рейсы в результат
+        // Добавляем прямые рейсы в результат (с дедупликацией)
         foreach (var f in directFlights)
         {
-            itineraries.Add(new Itinerary { Flights = new List<FlightInstance> { f } });
+            var key = f.Id.ToString();
+            if (keys.Add(key))
+            {
+                itineraries.Add(new Itinerary { Flights = new List<FlightInstance> { f } });
+            }
         }
 
         // 3. Рейсы с пересадкой ищем ТОЛЬКО если заданы оба города и дата
-        // (Логически пересадки не имеют смысла при частичном поиске)
         if (from != null && to != null && date.HasValue)
         {
             var searchDate = date.Value.Date;
 
             var firstLegs = allFlights.Where(f =>
-                f.Schema?.Origin?.City != null &&
+                f?.Schema != null &&
+                f.Schema.Origin?.City != null &&
                 f.Schema.Origin.City.IATACode.Equals(from.IATACode, StringComparison.OrdinalIgnoreCase) &&
                 f.LocalDepartureTime.Date == searchDate);
 
             foreach (var first in firstLegs)
             {
                 var secondLegs = allFlights.Where(second =>
-                    second.Schema?.Origin != null &&
-                    second.Schema?.Destination?.City != null &&
-                    second.Schema.Origin.Code == first.Schema.Destination.Code &&
+                    second?.Schema != null &&
+                    second.Schema.Origin != null &&
+                    second.Schema.Destination?.City != null &&
+                    // сравниваем коды аэропортов нечувствительно к регистру
+                    second.Schema.Origin.Code.Equals(first.Schema.Destination.Code, StringComparison.OrdinalIgnoreCase) &&
                     second.Schema.Destination.City.IATACode.Equals(to.IATACode, StringComparison.OrdinalIgnoreCase) &&
                     // Стык: минимум MinTransferTime, максимум 24 часа
                     second.LocalDepartureTime >= first.LocalArrivalTime.AddMinutes(first.Schema.Destination.MinTransferTime) &&
@@ -79,10 +84,14 @@ public class FlightSearchService
 
                 foreach (var second in secondLegs)
                 {
-                    itineraries.Add(new Itinerary
+                    var key = $"{first.Id}_{second.Id}";
+                    if (keys.Add(key))
                     {
-                        Flights = new List<FlightInstance> { first, second }
-                    });
+                        itineraries.Add(new Itinerary
+                        {
+                            Flights = new List<FlightInstance> { first, second }
+                        });
+                    }
                 }
             }
         }
@@ -92,13 +101,10 @@ public class FlightSearchService
 
     public async Task<List<Itinerary>> SearchItinerariesAsync(City from, City to, DateTime? departureDate, DateTime? returnDate)
     {
-        // Поиск "Туда"
         var outboundOptions = await SearchItinerariesAsync(from, to, departureDate);
 
-        // Если обратной даты нет — возвращаем только "Туда"
         if (!returnDate.HasValue) return outboundOptions;
 
-        // Поиск "Обратно"
         var inboundOptions = await SearchItinerariesAsync(to, from, returnDate);
         var roundTripResults = new List<Itinerary>();
 
@@ -106,13 +112,10 @@ public class FlightSearchService
         {
             foreach (var inbound in inboundOptions)
             {
-                // Проверка: вылет обратно должен быть строго после прилета "туда"
-                // Используем ArrivalTime (время прилета последнего сегмента первого билета)
                 if (inbound.DepartureTime > outbound.ArrivalTime.AddHours(1))
                 {
                     roundTripResults.Add(new Itinerary
                     {
-                        // Склеиваем списки рейсов в один маршрут
                         Flights = outbound.Flights.Concat(inbound.Flights).ToList()
                     });
                 }
@@ -121,30 +124,24 @@ public class FlightSearchService
         return roundTripResults.OrderBy(i => i.TotalBasePrice).ToList();
     }
 
-    // Фильтры теперь тоже работают с Itinerary!
+    // Фильтры
     public List<Itinerary> ApplyFilters(List<Itinerary> allItineraries, FlightFilterModel filters)
     {
         var query = allItineraries.AsEnumerable();
 
-        // 1. Цена (используем общую цену всей коробки/маршрута)
         query = query.Where(i => i.TotalBasePrice <= filters.MaxPrice);
 
-        // 2. Авиакомпании
-        // Если в маршруте есть хотя бы один рейс от выбранной авиакомпании — оставляем
         if (filters.SelectedAirlines.Any())
         {
-            var selectedCodes = filters.SelectedAirlines.Select(a => a.IATACode).ToHashSet();
+            var selectedCodes = filters.SelectedAirlines.Select(a => a.IATACode).ToHashSet(StringComparer.OrdinalIgnoreCase);
             query = query.Where(i => i.Flights.Any(f => selectedCodes.Contains(f.Schema.Carrier.IATACode)));
         }
 
-        // 3. Дни недели (смотрим по ПЕРВОМУ рейсу в маршруте)
         if (filters.SelectedDays.Any())
         {
             query = query.Where(i => filters.SelectedDays.Contains(i.Flights.First().LocalDepartureTime.DayOfWeek));
         }
 
-        // 4. Время суток (сложная логика с Morning/Day/Evening/Night)
-        // Проверяем время вылета ПЕРВОГО сегмента
         if (filters.SelectedTimeSlots.Any())
         {
             query = query.Where(i =>
@@ -157,28 +154,17 @@ public class FlightSearchService
             });
         }
 
-        // 5. Класс обслуживания
-        // Тут важный момент: в маршруте Itinerary мы проверяем, чтобы ВСЕ рейсы 
-        // поддерживали хотя бы один из выбранных классов.
         if (filters.SelectedClasses.Any())
         {
             query = query.Where(i => i.Flights.All(f =>
                 f.Aircraft.AvailableClasses.Overlaps(filters.SelectedClasses)));
         }
 
-        //// 6. Количество пересадок (бонус, если нужно)
-        //if (filters.MaxTransfers.HasValue)
-        //{
-        //    query = query.Where(i => (i.Flights.Count - 1) <= filters.MaxTransfers.Value);
-        //}
-
         return query.ToList();
     }
 
     public async Task<List<FlightInstance>> GetAvailableFlightsAsync()
     {
-        // Здесь в будущем можно добавить фильтрацию по статусу "Активен", 
-        // сортировку по цене или логику кеширования
         var flights = await _repository.GetAllFlightsAsync();
         return flights.ToList();
     }
@@ -188,7 +174,8 @@ public class FlightSearchService
         var airports = await _repository.GetAirportsAsync();
         return airports
             .Select(a => a.City)
-            .Distinct()
+            .GroupBy(c => c.IATACode, StringComparer.OrdinalIgnoreCase)
+            .Select(g => g.First())
             .OrderBy(c => c.Name)
             .ToList();
     }
