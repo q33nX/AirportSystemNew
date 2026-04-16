@@ -796,6 +796,10 @@
     animation: modal-entrance 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+.modal-dialog {
+    margin-top: 25px;
+}
+
 @keyframes modal-entrance {
     from {
         opacity: 0;

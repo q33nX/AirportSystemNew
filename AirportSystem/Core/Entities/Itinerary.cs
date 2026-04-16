@@ -7,8 +7,18 @@ public class Itinerary
     // Список всех перелетов в этом маршруте
     public List<FlightInstance> Flights { get; init; } = new();
 
+    // Флаги для топ-3 рейсов
+    public bool IsCheapest { get; set; }
+    public bool IsFastest { get; set; }
+    public bool IsMostComfortable { get; set; }
+
     // Общая стоимость всех сегментов
     public decimal TotalBasePrice => Flights.Sum(f => f.BasePrice);
+
+    // Лучший класс обслуживания среди всех сегментов
+    public ServiceClass BestServiceClass => Flights.Any(f => f.Aircraft?.AvailableClasses != null)
+        ? Flights.Max(f => f.Aircraft.AvailableClasses.Max(c => c))
+        : ServiceClass.Economy;
 
     // Время вылета (самый первый рейс) - по UTC
     public DateTime DepartureTime => Flights.Any() ? Flights.First().ActualDepartureTime : DateTime.MinValue;

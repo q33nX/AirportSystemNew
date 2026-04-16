@@ -159,6 +159,57 @@ public class FlightSearchService : IFlightSearchService
             .ToList();
     }
 
+    public List<Itinerary> MarkTopFlights(List<Itinerary> itineraries)
+    {
+        if (itineraries == null || !itineraries.Any())
+            return itineraries;
+
+        var result = itineraries.ToList();
+        var topFlights = new List<Itinerary>();
+
+        // 1. Самый дешевый
+        var cheapest = result.OrderBy(i => i.TotalBasePrice).First();
+        cheapest.IsCheapest = true;
+        topFlights.Add(cheapest);
+
+        // 2. Самый быстрый (исключаем cheapest)
+        var remaining = result.Where(i => i != cheapest).ToList();
+        var fastest = remaining.OrderBy(i => i.TotalDuration).FirstOrDefault();
+        if (fastest != null)
+        {
+            fastest.IsFastest = true;
+            topFlights.Add(fastest);
+        }
+
+        // 3. Самый комфортный (исключаем те, что уже получили категории, но добавляем даже если это cheapest или fastest)
+        var forComfort = result.Where(i => !topFlights.Contains(i)).ToList();
+        var mostComfortable = forComfort
+            .OrderByDescending(i => i.MaxComfortLevel)
+            .ThenByDescending(i => (int)i.BestServiceClass)
+            .ThenBy(i => i.TotalDuration)
+            .ThenBy(i => i.TotalBasePrice)
+            .FirstOrDefault();
+        
+        // Если не нашли среди оставшихся, ищем среди всех, исключая уже добавленные в топ
+        if (mostComfortable == null)
+        {
+            mostComfortable = result.Where(i => !topFlights.Contains(i))
+                .OrderByDescending(i => i.MaxComfortLevel)
+                .ThenByDescending(i => (int)i.BestServiceClass)
+                .ThenBy(i => i.TotalDuration)
+                .ThenBy(i => i.TotalBasePrice)
+                .FirstOrDefault();
+        }
+        
+        if (mostComfortable != null)
+        {
+            mostComfortable.IsMostComfortable = true;
+            topFlights.Add(mostComfortable);
+        }
+
+        return result;
+    }
+
     public async Task<List<FlightInstance>> GetAvailableFlightsAsync()
     {
         var flights = await _repository.GetAllFlightsAsync();

@@ -17,7 +17,7 @@
 @if (_selectedItinerary != null && _selectedItinerary.Flights?.Any() == true)
 {
     <div class="modal fade show d-block avia-modal-backdrop" tabindex="-1" @onclick="CloseDetails">
-        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable custom-modal-size" style="margin" @onclick:stopPropagation>
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable custom-modal-size" style="margin-top: 25px" @onclick:stopPropagation>
             <div class="modal-content border-0 shadow-lg rounded-5 overflow-hidden" style="max-width: 100% !important">
 
                 @* Шапка окна *@
@@ -191,7 +191,7 @@
                                         </div>
                                         <div class="text-end text-white-50 small">@(_adultsCount + _childrenCount) пасс.</div>
                                     </div>
-                                    <button class="btn btn-warning w-100 py-3 rounded-pill fw-bold fs-5 text-uppercase">Перейти к покупке</button>
+                                    <button class="btn btn-warning w-100 py-3 rounded-pill fw-bold fs-5 text-uppercase">Сохранить маршрут</button>
                                 </div>
                             </div>
                         </div>
@@ -329,15 +329,39 @@
                             // Берем первый и последний сегменты для общей информации
                             var firstFlight = itinerary.Flights.First();
                             var lastFlight = itinerary.Flights.Last();
+                            var isTop = itinerary.IsCheapest || itinerary.IsFastest || itinerary.IsMostComfortable;
+                            var borderColor = itinerary.IsCheapest && itinerary.IsFastest ? "#6610f2" : 
+                                              itinerary.IsCheapest && itinerary.IsMostComfortable ? "#0dcaf0" :
+                                              itinerary.IsFastest && itinerary.IsMostComfortable ? "#fd7e14" :
+                                              itinerary.IsCheapest ? "#198754" : 
+                                              itinerary.IsFastest ? "#0d6efd" : 
+                                              itinerary.IsMostComfortable ? "#ffc107" : "transparent";
 
-                            <div class="ticket-card shadow-sm mb-4 bg-white animate-fade-in">
+                            <div class="ticket-card shadow-sm mb-4 bg-white animate-fade-in" style="border-left: 4px solid @borderColor !important;">
+                                @if (isTop)
+                                {
+                                    <div class="d-flex gap-1 mb-2">
+                                        @if (itinerary.IsCheapest)
+                                        {
+                                            <span class="badge bg-success">💰 Дешевый</span>
+                                        }
+                                        @if (itinerary.IsFastest)
+                                        {
+                                            <span class="badge bg-primary">⚡ Быстрый</span>
+                                        }
+                                        @if (itinerary.IsMostComfortable)
+                                        {
+                                            <span class="badge bg-warning text-dark">✨ Комфорт</span>
+                                        }
+                                    </div>
+                                }
                                 <div class="row g-0 align-items-stretch">
                                     <div class="col-md-9 p-4 d-flex align-items-center">
                                         <div class="w-100">
                                             <div class="flight-route-info">
                                                 <div class="d-flex justify-content-between mb-2">
                                                     @* Статус берем у первого рейса или выводим общий *@
-                                                    <span class="text-muted small fw-bold pe-3">@firstFlight.Status</span>
+                                                    @* <span class="text-muted small fw-bold pe-3">@firstFlight.Status</span> *@
                                                     @* Если пересадка, можно вывести список номеров или только первый *@
                                                     <span class="text-muted small fw-bold pe-3">
                                                         @(itinerary.Flights.Count > 1 ? "Стыковочный рейс" : firstFlight.Schema.FlightNumber)
@@ -833,10 +857,13 @@
         // 1. Фильтруем
         _filteredFlights = FlightSearchService.ApplyFilters(_allFoundFlights, _filters);
 
-        // 2. Сортируем
+        // 2. Определяем топ-3 рейса
+        _filteredFlights = FlightSearchService.MarkTopFlights(_filteredFlights);
+
+        // 3. Сортируем
         SortFlightsInternal();
 
-        // 3. Обновляем отображение (сбрасываем на первую страницу)
+        // 4. Обновляем отображение (сбрасываем на первую страницу)
         _displayedFlights = _filteredFlights.Take(pageSize).ToList();
 
         StateHasChanged();
