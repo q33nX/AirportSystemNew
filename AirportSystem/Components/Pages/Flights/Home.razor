@@ -43,7 +43,7 @@
 
                                 @foreach (var (flight, index) in _selectedItinerary.Flights.Select((f, i) => (f, i)))
                                 {
-                                    var segDur = flight.LocalArrivalTime - flight.LocalDepartureTime;
+                                    var segDur = flight.ActualDuration;
                                     var segDurStr = $"{(int)segDur.TotalHours}ч {segDur.Minutes}м";
 
                                     <div class="segment-box bg-white p-4 rounded-4 shadow-sm mb-4 border border-light">
@@ -381,9 +381,9 @@
                                                         </div>
 
                                                         <div class="mb-3">
-                                                            @* Общая длительность из Itinerary *@
+                                                            @* Длительность из первого рейса (для прямого - это общая длительность) *@
                                                             @{
-                                                                var td = itinerary.TotalDuration;
+                                                                var td = firstFlight.ActualDuration;
                                                                 var tdStr = $"{(int)td.TotalHours}ч {td.Minutes}м";
                                                             }
                                                             <span class="small fw-bold text-muted">@tdStr</span>

@@ -39,27 +39,4 @@ public class FlightInstance
     public Aircraft Aircraft { get; init; } = null!;
     public decimal BasePrice { get; set; }
     public FlightStatus Status { get; set; } = FlightStatus.Scheduled;
-    public HashSet<string> OccupiedSeatIds { get; init; } = new();
-
-    private readonly object _seatLock = new();
-
-    public bool IsSeatAvailable(string seatId) => !OccupiedSeatIds.Contains(seatId);
-
-    public bool TryReserveSeat(string seatId)
-    {
-        lock (_seatLock)
-        {
-            if (OccupiedSeatIds.Contains(seatId)) return false;
-            OccupiedSeatIds.Add(seatId);
-            return true;
-        }
-    }
-
-    public bool ReleaseSeat(string seatId)
-    {
-        lock (_seatLock)
-        {
-            return OccupiedSeatIds.Remove(seatId);
-        }
-    }
 }

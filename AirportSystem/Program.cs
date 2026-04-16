@@ -13,8 +13,6 @@ builder.Services.AddSingleton<IFlightRepository, MockDataService>();
 
 builder.Services.AddScoped<IPriceCalculator, PriceCalculatorService>();
 builder.Services.AddScoped<IFlightSearchService, FlightSearchService>();
-builder.Services.AddScoped<IBookingService, BookingService>();
-builder.Services.AddScoped<BookingStateService>();
 
 var app = builder.Build();
 
