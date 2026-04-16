@@ -811,6 +811,12 @@
                 ? _filteredFlights.OrderBy(f => f.TotalDuration).ToList()
                 : _filteredFlights.OrderByDescending(f => f.TotalDuration).ToList();
         }
+        else if (_activeSort == "comfort")
+        {
+            _filteredFlights = _isAscending
+                ? _filteredFlights.OrderBy(f => f.MaxComfortLevel).ToList()
+                : _filteredFlights.OrderByDescending(f => f.MaxComfortLevel).ToList();
+        }
     }
 
     // --- Вспомогательные методы ---

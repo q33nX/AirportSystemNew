@@ -1,4 +1,6 @@
-﻿namespace AirportSystem.Core.Entities;
+﻿using AirportSystem.Core.Enums;
+
+namespace AirportSystem.Core.Entities;
 
 public class Itinerary
 {
@@ -19,6 +21,11 @@ public class Itinerary
 
     // Свойство для UI: Количество пересадок
     public int StopsCount => Flights.Count - 1;
+
+    // Максимальный уровень комфорта среди всех сегментов (0=Economy, 1=Comfort, 2=Business, 3=First)
+    public int MaxComfortLevel => Flights.Any(f => f.Aircraft?.AvailableClasses != null)
+        ? Flights.Max(f => f.Aircraft.AvailableClasses.Max(c => (int)c))
+        : 0;
 
     // Проверка на международный статус (у тебя уже была эта отличная логика)
     public bool IsInternational => Flights.Any(f =>
