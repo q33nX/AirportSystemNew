@@ -111,7 +111,7 @@
                                                        @onchange="@(() => _selectedServiceClass = sClass)">
                                                 <label class="btn btn-outline-primary w-100 p-3 rounded-4 text-start" for="modal_@sClass">
                                                     <span class="d-block fw-bold">@TranslateClass(sClass)</span>
-                                                    <span class="small opacity-75">@(sClass == ServiceClass.Business ? "+ ₽₽" : "Стандарт")</span>
+                                                    <span class="small opacity-75">@GetClassDescription(sClass)</span>
                                                 </label>
                                             </div>
                                         }
@@ -520,6 +520,10 @@
                                         {
                                             <i class="bi bi-person"></i>
                                         }
+                                        else if (sc == ServiceClass.Comfort)
+                                        {
+                                            <i class="bi bi-cup-straw"></i>
+                                        }
                                         else if (sc == ServiceClass.Business)
                                         {
 
@@ -919,12 +923,23 @@
     {
         if (_selectedItinerary == null) return 0;
 
-        // Базовая цена за взрослых + 70% за детей
-        decimal baseTotal = (_selectedItinerary.TotalBasePrice * _adultsCount) +
-                            (_selectedItinerary.TotalBasePrice * 0.7m * _childrenCount);
+        var priceCalculator = new PriceCalculatorService();
+        
+        // Рассчитываем цену через сервис с учётом класса обслуживания
+        decimal baseTotal = priceCalculator.CalculateTotalItineraryPrice(
+            _selectedItinerary,
+            _adultsCount,
+            _selectedServiceClass,
+            SeatLocation.Aisle);
 
-        // Наценка за бизнес-класс (например, +50% к базе)
-        if (_selectedServiceClass == ServiceClass.Business) baseTotal *= 1.5m;
+        // Дети платят 70% от цены
+        decimal childrenPrice = priceCalculator.CalculateTotalItineraryPrice(
+            _selectedItinerary,
+            _childrenCount,
+            _selectedServiceClass,
+            SeatLocation.Aisle) * 0.7m;
+
+        baseTotal += childrenPrice;
 
         // Доп. услуги
         if (_hasExtraBaggage) baseTotal += 2500 * (_adultsCount + _childrenCount);

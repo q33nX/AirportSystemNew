@@ -1,11 +1,21 @@
 ﻿using AirportSystem.Core.Entities;
 using AirportSystem.Core.ViewModels;
 using Microsoft.AspNetCore.Components;
+using AirportSystem.Core.Enums;
 
 namespace AirportSystem.Components.Pages // Проверьте ваш namespace
 {
     public partial class Home
     {
+        private string GetClassDescription(ServiceClass sClass) => sClass switch
+        {
+            ServiceClass.Economy => "Стандарт",
+            ServiceClass.Comfort => "Комфорт",
+            ServiceClass.Business => "Бизнес",
+            ServiceClass.First => "Первый класс",
+            _ => ""
+        };
+
         // Перечисляемое для режимов поиска (избавляемся от строк)
         private enum SearchMode { Roundtrip, MultiCity }
 

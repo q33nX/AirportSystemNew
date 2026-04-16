@@ -1,6 +1,7 @@
 ﻿using AirportSystem.Core.Entities;
 using AirportSystem.Core.Interfaces;
 using AirportSystem.Core.Enums;
+using AirportSystem.Core.Configuration;
 
 namespace AirportSystem.Core.Services;
 
@@ -71,30 +72,10 @@ public class MockDataService : IFlightRepository
         };
         Airlines.AddRange(airlinesList);
 
-        // 4. Самолеты (с предзаполнением AvailableClasses)
-        var airbusA320 = new Aircraft { Model = "Airbus A320", Owner = airlinesList[0] };
-        for (int r = 1; r <= 25; r++)
-        {
-            var sClass = r <= 3 ? ServiceClass.Business : ServiceClass.Economy;
-            airbusA320.AvailableClasses.Add(sClass);
-            foreach (char l in "ABCDEF")
-                airbusA320.Seats.Add(new Seat { Row = r, Letter = l, Class = sClass, Location = SeatLocation.Window });
-        }
-
-        var boeing777 = new Aircraft { Model = "Boeing 777", Owner = airlinesList[2] };
-        for (int r = 1; r <= 45; r++)
-        {
-            var sClass = r <= 4 ? ServiceClass.First : (r <= 12 ? ServiceClass.Business : ServiceClass.Economy);
-            boeing777.AvailableClasses.Add(sClass);
-            foreach (char l in "ABCDEF")
-                boeing777.Seats.Add(new Seat { Row = r, Letter = l, Class = sClass, Location = SeatLocation.Aisle });
-        }
-
-        var boeing737 = new Aircraft { Model = "Boeing 737-800", Owner = airlinesList[3] };
-        boeing737.AvailableClasses.Add(ServiceClass.Economy);
-        for (int r = 1; r <= 30; r++)
-            foreach (char l in "ABCDEF")
-                boeing737.Seats.Add(new Seat { Row = r, Letter = l, Class = ServiceClass.Economy, Location = SeatLocation.Middle });
+        // 4. Самолеты (используем конфигурацию кабины)
+        var airbusA320 = CreateAircraftFromConfig("Airbus A320", airlinesList[0], "ABCDEF");
+        var boeing777 = CreateAircraftFromConfig("Boeing 777", airlinesList[2], "ABCDEF");
+        var boeing737 = CreateAircraftFromConfig("Boeing 737-800", airlinesList[3], "ABCDEF");
 
         // 5. Шаблоны рейсов (40 маршрутов)
         for (int i = 0; i < 40; i++)
@@ -161,5 +142,50 @@ public class MockDataService : IFlightRepository
     public async Task<List<Airport>> GetAirportsAsync()
     {
         return await Task.FromResult(Airports);
+    }
+
+    private static Aircraft CreateAircraftFromConfig(string model, Airline owner, string seatLetters)
+    {
+        var config = AircraftCabinConfigurations.Get(model);
+        if (config == null)
+            return new Aircraft { Model = model, Owner = owner };
+
+        var aircraft = new Aircraft { Model = model, Owner = owner };
+
+        foreach (var group in config.SeatGroups)
+        {
+            aircraft.AvailableClasses.Add(group.ServiceClass);
+            
+            for (int r = group.StartRow; r <= group.EndRow; r++)
+            {
+                foreach (char letter in seatLetters)
+                {
+                    var location = GetLocationForSeat(r, group.StartRow, group.EndRow);
+                    aircraft.Seats.Add(new Seat 
+                    { 
+                        Row = r, 
+                        Letter = letter, 
+                        Class = group.ServiceClass, 
+                        Location = location 
+                    });
+                }
+            }
+        }
+
+        return aircraft;
+    }
+
+    private static SeatLocation GetLocationForSeat(int row, int startRow, int endRow)
+    {
+        int totalRows = endRow - startRow + 1;
+        
+        if (totalRows <= 1) return SeatLocation.Middle;
+        
+        int positionInGroup = row - startRow;
+        
+        if (positionInGroup == 0) return SeatLocation.Window;
+        if (positionInGroup == totalRows - 1) return SeatLocation.Window;
+        
+        return SeatLocation.Middle;
     }
 }

@@ -2,6 +2,8 @@ using AirportSystem.Core.Entities;
 using AirportSystem.Core.Interfaces;
 using AirportSystem.Core.ViewModels;
 using AirportSystem.Core.Enums;
+using AirportSystem.Core.Constants;
+using AirportSystem.Core.Extensions;
 
 namespace AirportSystem.Core.Services;
 
@@ -22,15 +24,12 @@ public class FlightSearchService : IFlightSearchService
         var itineraries = new List<Itinerary>();
         var usedKeys = new HashSet<string>();
 
-        // Определяем режим поиска
         var hasFrom = from != null && !string.IsNullOrEmpty(from.IATACode);
         var hasTo = to != null && !string.IsNullOrEmpty(to.IATACode);
         
-        // Если нет ни одного города - не ищем
         if (!hasFrom && !hasTo)
             return new List<Itinerary>();
 
-        // Прямые рейсы
         var directFlights = allFlights.Where(f => 
             f?.Schema != null &&
             f.Schema.Origin?.City != null &&
@@ -48,7 +47,7 @@ public class FlightSearchService : IFlightSearchService
             }
         }
 
-        // Рейсы с пересадкой - только если есть оба города И дата
+        // Поиск рейсов с пересадкой
         if (hasFrom && hasTo && date.HasValue)
         {
             var searchDate = date.Value.Date;
@@ -65,8 +64,8 @@ public class FlightSearchService : IFlightSearchService
                     second.Schema.Destination?.City != null &&
                     second.Schema.Origin.Code.Equals(first.Schema.Destination.Code, StringComparison.OrdinalIgnoreCase) &&
                     MatchesCity(second.Schema.Destination.City, to) &&
-                    second.ActualDepartureTime >= first.ActualArrivalTime.AddMinutes(first.Schema.Destination.MinTransferTime) &&
-                    second.ActualDepartureTime <= first.ActualArrivalTime.AddHours(24) &&
+                    second.ActualDepartureTime >= first.ActualArrivalTime.AddMinutes(SearchConstants.MinTransferTimeMinutes) &&
+                    second.ActualDepartureTime <= first.ActualArrivalTime.AddHours(SearchConstants.MaxTransferTimeHours) &&
                     second.LocalDepartureTime.Date <= searchDate.AddDays(1));
 
                 foreach (var second in secondLegs)
@@ -93,7 +92,7 @@ public class FlightSearchService : IFlightSearchService
 
         var roundTripResults = outboundOptions
             .SelectMany(outbound => inboundOptions
-                .Where(inbound => inbound.DepartureTime > outbound.ArrivalTime.AddHours(1))
+                .Where(inbound => inbound.DepartureTime > outbound.ArrivalTime.AddHours(SearchConstants.MinRoundTripIntervalHours))
                 .Select(inbound => new Itinerary
                 {
                     Flights = outbound.Flights.Concat(inbound.Flights).ToList()
@@ -106,7 +105,7 @@ public class FlightSearchService : IFlightSearchService
 
     public async Task<List<Itinerary>> SearchMultiCityAsync(List<(City From, City To, DateTime? Date)> segments)
     {
-        if (segments == null || segments.Count < 2)
+        if (segments == null || segments.Count < SearchConstants.MinMultiCitySegments)
             return new List<Itinerary>();
 
         var allFlights = await _repository.GetAllFlightsAsync();
@@ -138,7 +137,7 @@ public class FlightSearchService : IFlightSearchService
                     currentSegmentResults
                         .Where(currentItinerary => 
                             currentItinerary.DepartureTime.Date >= minDate &&
-                            currentItinerary.DepartureTime > firstItinerary.ArrivalTime.AddHours(1))
+                            currentItinerary.DepartureTime > firstItinerary.ArrivalTime.AddHours(SearchConstants.MinRoundTripIntervalHours))
                         .Select(currentItinerary => new Itinerary
                         {
                             Flights = firstItinerary.Flights.Concat(currentItinerary.Flights).ToList()
@@ -153,40 +152,11 @@ public class FlightSearchService : IFlightSearchService
         return firstSegmentResults.OrderBy(i => i.TotalBasePrice).ToList();
     }
 
-    public List<Itinerary> ApplyFilters(List<Itinerary> allItineraries, FlightFilterModel filters)
+    public List<Itinerary> ApplyFilters(List<Itinerary> allItineraries, FlightFilterModel filter)
     {
-        var query = allItineraries.AsEnumerable();
-
-        query = query.Where(i => i.TotalBasePrice <= filters.MaxPrice);
-
-        if (filters.AllowedStops.Any())
-        {
-            query = query.Where(i => filters.AllowedStops.Contains(i.StopsCount));
-        }
-
-        if (filters.SelectedAirlines.Any())
-        {
-            var selectedCodes = filters.SelectedAirlines.Select(a => a.IATACode).ToHashSet(StringComparer.OrdinalIgnoreCase);
-            query = query.Where(i => i.Flights.Any(f => selectedCodes.Contains(f.Schema.Carrier.IATACode)));
-        }
-
-        if (filters.SelectedDays.Any())
-        {
-            query = query.Where(i => filters.SelectedDays.Contains(i.Flights.First().LocalDepartureTime.DayOfWeek));
-        }
-
-        if (filters.SelectedTimeSlots.Any())
-        {
-            query = query.Where(i => IsTimeSlotMatch(i, filters.SelectedTimeSlots));
-        }
-
-        if (filters.SelectedClasses.Any())
-        {
-            query = query.Where(i => i.Flights.All(f =>
-                f.Aircraft.AvailableClasses.Overlaps(filters.SelectedClasses)));
-        }
-
-        return query.ToList();
+        return allItineraries
+            .Where(i => i.MatchesFilter(filter))
+            .ToList();
     }
 
     public async Task<List<FlightInstance>> GetAvailableFlightsAsync()
@@ -218,14 +188,5 @@ public class FlightSearchService : IFlightSearchService
         if (!date.HasValue)
             return true;
         return f.LocalDepartureTime.Date == date.Value.Date;
-    }
-
-    private static bool IsTimeSlotMatch(Itinerary itinerary, List<string> selectedTimeSlots)
-    {
-        int hour = itinerary.Flights.First().LocalDepartureTime.Hour;
-        return (selectedTimeSlots.Contains("Morning") && hour >= 6 && hour < 12) ||
-               (selectedTimeSlots.Contains("Day") && hour >= 12 && hour < 18) ||
-               (selectedTimeSlots.Contains("Evening") && hour >= 18 && hour < 24) ||
-               (selectedTimeSlots.Contains("Night") && (hour >= 0 && hour < 6));
     }
 }
