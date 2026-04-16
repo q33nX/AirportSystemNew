@@ -1,71 +1,53 @@
-﻿using AirportSystem.Core.Entities;
+using AirportSystem.Core.Entities;
 using AirportSystem.Core.Interfaces;
 using AirportSystem.Core.ViewModels;
 using AirportSystem.Core.Enums;
 
 namespace AirportSystem.Core.Services;
 
-public class FlightSearchService
+public class FlightSearchService : IFlightSearchService
 {
     private readonly IFlightRepository _repository;
-    private readonly IPriceCalculator _priceCalculator;
 
-    public FlightSearchService(IFlightRepository repository, IPriceCalculator priceCalculator)
+    public FlightSearchService(IFlightRepository repository)
     {
         _repository = repository;
-        _priceCalculator = priceCalculator;
     }
 
     public async Task<List<Itinerary>> SearchItinerariesAsync(City from, City to, DateTime? date)
     {
         if (from == null && to == null && !date.HasValue)
-            return new List<Itinerary>();                                                       
+            return new List<Itinerary>();
 
         var allFlights = await _repository.GetAllFlightsAsync();
         if (allFlights == null) return new List<Itinerary>();
 
         var itineraries = new List<Itinerary>();
+        var usedKeys = new HashSet<string>();
 
-        // Локальное множество ключей для дедупликации комбинаций
-        var keys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var directFlights = allFlights.Where(f => 
+            f?.Schema != null &&
+            f.Schema.Origin?.City != null &&
+            f.Schema.Destination?.City != null &&
+            MatchesCity(f.Schema.Origin.City, from) &&
+            MatchesCity(f.Schema.Destination.City, to) &&
+            MatchesDate(f, date));
 
-        // 2. Ищем прямые рейсы
-        var directFlights = allFlights.Where(f =>
-        {
-            if (f?.Schema == null) return false;
-            if (f.Schema.Origin?.City == null || f.Schema.Destination?.City == null) return false;
-
-            bool matchesOrigin = from == null ||
-                f.Schema.Origin.City.IATACode.Equals(from.IATACode, StringComparison.OrdinalIgnoreCase);
-
-            bool matchesDestination = to == null ||
-                f.Schema.Destination.City.IATACode.Equals(to.IATACode, StringComparison.OrdinalIgnoreCase);
-
-            bool matchesDate = !date.HasValue ||
-                f.LocalDepartureTime.Date == date.Value.Date;
-
-            return matchesOrigin && matchesDestination && matchesDate;
-        }).ToList();
-
-        // Добавляем прямые рейсы в результат (с дедупликацией)
         foreach (var f in directFlights)
         {
             var key = f.Id.ToString();
-            if (keys.Add(key))
+            if (usedKeys.Add(key))
             {
                 itineraries.Add(new Itinerary { Flights = new List<FlightInstance> { f } });
             }
         }
 
-        // 3. Рейсы с пересадкой ищем ТОЛЬКО если заданы оба города и дата
         if (from != null && to != null && date.HasValue)
         {
             var searchDate = date.Value.Date;
-
             var firstLegs = allFlights.Where(f =>
-                f?.Schema != null &&
-                f.Schema.Origin?.City != null &&
-                f.Schema.Origin.City.IATACode.Equals(from.IATACode, StringComparison.OrdinalIgnoreCase) &&
+                f?.Schema?.Origin?.City != null &&
+                MatchesCity(f.Schema.Origin.City, from) &&
                 f.LocalDepartureTime.Date == searchDate);
 
             foreach (var first in firstLegs)
@@ -74,23 +56,17 @@ public class FlightSearchService
                     second?.Schema != null &&
                     second.Schema.Origin != null &&
                     second.Schema.Destination?.City != null &&
-                    // сравниваем коды аэропортов нечувствительно к регистру
                     second.Schema.Origin.Code.Equals(first.Schema.Destination.Code, StringComparison.OrdinalIgnoreCase) &&
-                    second.Schema.Destination.City.IATACode.Equals(to.IATACode, StringComparison.OrdinalIgnoreCase) &&
-                    // Стык: минимум MinTransferTime, максимум 24 часа
+                    MatchesCity(second.Schema.Destination.City, to) &&
                     second.LocalDepartureTime >= first.LocalArrivalTime.AddMinutes(first.Schema.Destination.MinTransferTime) &&
-                    second.LocalDepartureTime <= first.LocalArrivalTime.AddHours(24)
-                );
+                    second.LocalDepartureTime <= first.LocalArrivalTime.AddHours(24));
 
                 foreach (var second in secondLegs)
                 {
                     var key = $"{first.Id}_{second.Id}";
-                    if (keys.Add(key))
+                    if (usedKeys.Add(key))
                     {
-                        itineraries.Add(new Itinerary
-                        {
-                            Flights = new List<FlightInstance> { first, second }
-                        });
+                        itineraries.Add(new Itinerary { Flights = new List<FlightInstance> { first, second } });
                     }
                 }
             }
@@ -106,25 +82,54 @@ public class FlightSearchService
         if (!returnDate.HasValue) return outboundOptions;
 
         var inboundOptions = await SearchItinerariesAsync(to, from, returnDate);
-        var roundTripResults = new List<Itinerary>();
 
-        foreach (var outbound in outboundOptions)
-        {
-            foreach (var inbound in inboundOptions)
-            {
-                if (inbound.DepartureTime > outbound.ArrivalTime.AddHours(1))
+        var roundTripResults = outboundOptions
+            .SelectMany(outbound => inboundOptions
+                .Where(inbound => inbound.DepartureTime > outbound.ArrivalTime.AddHours(1))
+                .Select(inbound => new Itinerary
                 {
-                    roundTripResults.Add(new Itinerary
-                    {
-                        Flights = outbound.Flights.Concat(inbound.Flights).ToList()
-                    });
-                }
-            }
-        }
-        return roundTripResults.OrderBy(i => i.TotalBasePrice).ToList();
+                    Flights = outbound.Flights.Concat(inbound.Flights).ToList()
+                }))
+            .OrderBy(i => i.TotalBasePrice)
+            .ToList();
+
+        return roundTripResults;
     }
 
-    // Фильтры
+    public async Task<List<Itinerary>> SearchMultiCityAsync(List<(City From, City To, DateTime? Date)> segments)
+    {
+        if (segments == null || segments.Count < 2)
+            return new List<Itinerary>();
+
+        var firstSegment = segments[0];
+        var firstSegmentResults = await SearchItinerariesAsync(firstSegment.From, firstSegment.To, firstSegment.Date);
+
+        for (int i = 1; i < segments.Count; i++)
+        {
+            var prevSegment = segments[i - 1];
+            var currentSegment = segments[i];
+            var minDate = prevSegment.Date?.Date;
+
+            var currentSegmentResults = await SearchItinerariesAsync(currentSegment.From, currentSegment.To, currentSegment.Date);
+
+            var validResults = firstSegmentResults
+                .SelectMany(firstItinerary =>
+                    currentSegmentResults
+                        .Where(currentItinerary => 
+                            currentItinerary.DepartureTime.Date >= minDate &&
+                            currentItinerary.DepartureTime > firstItinerary.ArrivalTime.AddHours(1))
+                        .Select(currentItinerary => new Itinerary
+                        {
+                            Flights = firstItinerary.Flights.Concat(currentItinerary.Flights).ToList()
+                        }))
+                .ToList();
+
+            firstSegmentResults = validResults;
+        }
+
+        return firstSegmentResults.OrderBy(i => i.TotalBasePrice).ToList();
+    }
+
     public List<Itinerary> ApplyFilters(List<Itinerary> allItineraries, FlightFilterModel filters)
     {
         var query = allItineraries.AsEnumerable();
@@ -144,14 +149,7 @@ public class FlightSearchService
 
         if (filters.SelectedTimeSlots.Any())
         {
-            query = query.Where(i =>
-            {
-                int hour = i.Flights.First().LocalDepartureTime.Hour;
-                return (filters.SelectedTimeSlots.Contains("Morning") && hour >= 6 && hour < 12) ||
-                       (filters.SelectedTimeSlots.Contains("Day") && hour >= 12 && hour < 18) ||
-                       (filters.SelectedTimeSlots.Contains("Evening") && hour >= 18 && hour < 24) ||
-                       (filters.SelectedTimeSlots.Contains("Night") && (hour >= 0 && hour < 6));
-            });
+            query = query.Where(i => IsTimeSlotMatch(i, filters.SelectedTimeSlots));
         }
 
         if (filters.SelectedClasses.Any())
@@ -178,5 +176,25 @@ public class FlightSearchService
             .Select(g => g.First())
             .OrderBy(c => c.Name)
             .ToList();
+    }
+
+    private static bool MatchesCity(City flightCity, City searchCity)
+    {
+        return searchCity == null || 
+            flightCity.IATACode.Equals(searchCity.IATACode, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool MatchesDate(FlightInstance f, DateTime? date)
+    {
+        return !date.HasValue || f.LocalDepartureTime.Date == date.Value.Date;
+    }
+
+    private static bool IsTimeSlotMatch(Itinerary itinerary, List<string> selectedTimeSlots)
+    {
+        int hour = itinerary.Flights.First().LocalDepartureTime.Hour;
+        return (selectedTimeSlots.Contains("Morning") && hour >= 6 && hour < 12) ||
+               (selectedTimeSlots.Contains("Day") && hour >= 12 && hour < 18) ||
+               (selectedTimeSlots.Contains("Evening") && hour >= 18 && hour < 24) ||
+               (selectedTimeSlots.Contains("Night") && (hour >= 0 && hour < 6));
     }
 }

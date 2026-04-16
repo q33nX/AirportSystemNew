@@ -1,13 +1,12 @@
 ﻿@page "/"
 @rendermode InteractiveServer
 @inject IJSRuntime JSRuntime
+@inject IFlightSearchService FlightSearchService
 @using AirportSystem.Core.Entities
 @using AirportSystem.Core.Services
 @using AirportSystem.Core.Interfaces
 @using AirportSystem.Core.ViewModels
 @using AirportSystem.Core.Enums
-
-@inject FlightSearchService FlightSearchService
 
 <PageTitle>Поиск авиабилетов</PageTitle>
 
@@ -635,12 +634,24 @@
         try
         {
             // 1. Получаем данные из сервиса
-            _allFoundFlights = await FlightSearchService.SearchItinerariesAsync(
-                _departureCity,
-                _arrivalCity,
-                _departureDate,
-                _returnDate
-            );
+            if (_currentMode == SearchMode.MultiCity)
+            {
+                var segments = Segments
+                    .Where(s => s.DepartureCity != null && s.ArrivalCity != null)
+                    .Select(s => (s.DepartureCity, s.ArrivalCity, s.DepartureDate))
+                    .ToList();
+
+                _allFoundFlights = await FlightSearchService.SearchMultiCityAsync(segments);
+            }
+            else
+            {
+                _allFoundFlights = await FlightSearchService.SearchItinerariesAsync(
+                    _departureCity,
+                    _arrivalCity,
+                    _departureDate,
+                    _returnDate
+                );
+            }
 
             // ВЫЧИСЛЯЕМ ГРАНИЦЫ ЦЕН ДЛЯ ФИЛЬТРА
             if (_allFoundFlights.Any())

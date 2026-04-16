@@ -8,11 +8,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-// MockDataService хранит in-memory данные — делаем его синглтоном, чтобы данные были общими для всего приложения.
+// MockDataService пїЅпїЅпїЅпїЅпїЅпїЅ in-memory пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
 builder.Services.AddSingleton<IFlightRepository, MockDataService>();
 
 builder.Services.AddScoped<IPriceCalculator, PriceCalculatorService>();
-builder.Services.AddScoped<FlightSearchService>();
+builder.Services.AddScoped<IFlightSearchService, FlightSearchService>();
 builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<BookingStateService>();
 
